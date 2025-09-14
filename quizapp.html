@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz App</title>
+<style type="text/css">
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 800px;
+        width: 100%;
+        padding: 10px;
+    }
+
+    .settings-popup, .quiz-popup, .results-popup {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        margin: 10px;
+        text-align: center;
+        display: none;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .settings-popup.active, .quiz-popup.active, .results-popup.active {
+        display: block;
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    h2 {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .settings-option {
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    #timer-duration, #question-count, #question-type {
+        padding: 12px;
+        font-size: 16px;
+        width: 120px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        background: #fff;
+        cursor: pointer;
+    }
+
+    #question-type {
+        width: 200px;
+    }
+
+    #timer-duration:focus, #question-count:focus, #question-type:focus {
+        border-color: #007bff;
+    }
+
+    button {
+        padding: 12px 24px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+        background: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .quiz-container {
+        padding: 20px;
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .timer {
+        font-size: 20px;
+        color: #2c3e50;
+        font-weight: bold;
+    }
+
+    .timer.warning {
+        animation: flash 1s infinite;
+    }
+
+    @keyframes flash {
+        0%, 100% { background: transparent; }
+        50% { background: rgba(255, 0, 0, 0.3); }
+    }
+
+    .question-section {
+        margin: 20px 0;
+    }
+
+    #question {
+        font-size: 22px;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    #options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .option {
+        padding: 15px;
+        background: #f8f9fa;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        color: black;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .option:hover {
+        background: #e0e0e0;
+        transform: translateX(5px);
+    }
+
+    .option.selected {
+        background: #007bff;
+        color: white;
+        border-color: #0056b3;
+    }
+
+    .option.correct {
+        animation: correctAnswer 0.5s forwards;
+    }
+
+    .option.incorrect {
+        animation: incorrectAnswer 0.5s forwards;
+    }
+
+    @keyframes correctAnswer {
+        0% { transform: scale(1); background: #f8f9fa; }
+        100% { transform: scale(1.05); background: #28a745; color: white; border-color: #218838; }
+    }
+
+    @keyframes incorrectAnswer {
+        0% { transform: scale(1); background: #f8f9fa; }
+        100% { transform: scale(1.05); background: #dc3545; color: white; border-color: #c82333; }
+    }
+
+    .results-container {
+        text-align: center;
+    }
+
+    .score-circle {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #007bff, #00c4ff);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px auto;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .results-summary {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-size: 18px;
+        color: #2c3e50;
+    }
+
+    #results-list {
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 0 10px;
+    }
+
+    .result-item {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideIn 0.5s forwards;
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .result-item.correct {
+        border-left: 5px solid #28a745;
+    }
+
+    .result-item.incorrect {
+        border-left: 5px solid #dc3545;
+    }
+
+    @keyframes slideIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    #progress-bar-container {
+        width: 100%;
+        background: #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    #progress-bar {
+        height: 12px;
+        background: linear-gradient(90deg, #007bff, #00c4ff);
+        width: 0%;
+        transition: width 0.3s ease-in-out;
+    }
+
+    .category-info {
+        font-size: 14px;
+        color: #2c3e50;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <!-- Settings Popup -->
+    <div class="settings-popup active">
+        <h2>Quiz Settings</h2>
+        <div class="settings-option">
+            <label for="question-type">Select Question Type:</label>
+            <select id="question-type">
+                <option value="intelligence">Intelligence Test</option>
+                <option value="grammar">English Grammar</option>
+                <option value="mixed">Mixed Questions</option>
+            </select>
+        </div>
+        <div class="settings-option">
+            <label for="timer-duration">Set Total Quiz Timer (minutes):</label>
+            <input type="number" id="timer-duration" min="1" value="3">
+        </div>
+        <div class="settings-option">
+            <label for="question-count">Number of Questions:</label>
+            <input type="number" id="question-count" min="1" max="58" value="10">
+        </div>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Popup -->
+    <div class="quiz-popup">
+        <div class="quiz-container">
+            <header>
+                <h2 id="quiz-title">Quiz App</h2>
+                <div class="timer">Time Left: <span id="time">3:00</span></div>
+            </header>
+            <div class="question-section">
+                <h3 id="question"></h3>
+                <div id="options"></div>
+            </div>
+            <div class="quiz-footer">
+                <p id="question-status"></p>
+  	            <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
+                <button id="end-btn" onclick="endQuiz()" style="margin-left:8px;" >End Quiz</button>  	            
+            </div>
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Popup -->
+    <div class="results-popup">
+        <div class="results-container">
+            <h2>Quiz Results</h2>
+            <div class="score-circle">
+                <span id="score"></span>
+            </div>
+            <div class="results-summary">
+                <p id="summary-text"></p>
+            </div>
+            <div id="results-list"></div>
+            <button onclick="restartQuiz()">Try Again</button>
+        </div>
+    </div>
+</div>
+<!-- <script type="text/javascript" src="questions.js"></script>   -->
+<script>
+   
+ let quizData = [
+   { question: "Big is to small as tall is to ?", options: ["Short", "High", "Long", "Wide"], answer: "Short", category: "intelligence" },
+   { question: "Find the odd one out: Apple, Banana, Carrot, Mango", options: ["Apple", "Banana", "Carrot", "Mango"], answer: "Carrot", category: "intelligence" },
+   { question: "What is a synonym for 'happy'?", options: ["Sad", "Joyful", "Angry", "Tired"], answer: "Joyful", category: "intelligence" },
+   { question: "Complete the sentence: The  of the book was thrilling.", options: ["Ending", "Cover", "Title", "Author"], answer: "Ending", category: "intelligence" },
+   { question: "If 'CAT' is coded as 'DBU', how is 'DOG' coded?", options: ["EPH", "FQI", "DQI", "EPI"], answer: "EPH", category: "intelligence" },
+   { question: "What is an antonym for 'big'?", options: ["Large", "Small", "Huge", "Great"], answer: "Small", category: "intelligence" },
+   { question: "Book is to read as knife is to ?", options: ["Cut", "Eat", "Write", "Draw"], answer: "Cut", category: "intelligence" },
+   { question: "Which word does not belong: Blue, Red, Green, Table?", options: ["Blue", "Red", "Green", "Table"], answer: "Table", category: "intelligence" },
+   { question: "Rearrange 'ACT' to form a word.", options: ["Cat", "Act", "Tac", "Cot"], answer: "Act", category: "intelligence" },
+   { question: "What is a synonym for 'quick'?", options: ["Slow", "Fast", "Heavy", "Bright"], answer: "Fast", category: "intelligence" },
+   { question: "If 'HOUSE' is coded as 'IPVTF', how is 'GARDEN' coded?", options: ["HBSFOP", "IBUFPO", "HBUFOP", "IBSFPO"], answer: "HBSFOP", category: "intelligence" },
+   { question: "Complete the analogy: Pen is to write as hammer is to ?", options: ["Nail", "Build", "Hit", "Cut"], answer: "Hit", category: "intelligence" },
+   { question: "Find the odd one out: Chair, Table, Sofa, Lamp", options: ["Chair", "Table", "Sofa", "Lamp"], answer: "Lamp", category: "intelligence" },
+   { question: "What is an antonym for 'bright'?", options: ["Shiny", "Dull", "Light", "Clear"], answer: "Dull", category: "intelligence" },
+   { question: "If 'FISH' is coded as 'GJTI', how is 'BIRD' coded?", options: ["CJSE", "DKTF", "EJUG", "FIWH"], answer: "CJSE", category: "intelligence" },
+   { question: "Which word means the same as 'courageous'?", options: ["Fearful", "Brave", "Weak", "Timid"], answer: "Brave", category: "intelligence" },
+   { question: "Complete the sentence: She was ___ because she won the race.", options: ["Sad", "Tired", "Elated", "Angry"], answer: "Elated", category: "intelligence" },
+   { question: "Find the odd one out: Dog, Cat, Bird, Car", options: ["Dog", "Cat", "Bird", "Car"], answer: "Car", category: "intelligence" },
+   { question: "What is a synonym for 'beautiful'?", options: ["Ugly", "Pretty", "Plain", "Dull"], answer: "Pretty", category: "intelligence" },
+   { question: "If 'STAR' is coded as 'TUBS', how is 'MOON' coded?", options: ["NPPQ", "OPQR", "NPPO", "PQRS"], answer: "NPPO", category: "intelligence" },
+   { question: "Complete the analogy: Teacher is to classroom as chef is to ?", options: ["Kitchen", "Bedroom", "Office", "Garden"], answer: "Kitchen", category: "intelligence" },
+   { question: "What is an antonym for 'strong'?", options: ["Powerful", "Weak", "Tough", "Hard"], answer: "Weak", category: "intelligence" },
+   { question: "Find the odd one out: Rose, Tulip, Daisy, Tree", options: ["Rose", "Tulip", "Daisy", "Tree"], answer: "Tree", category: "intelligence" },
+   { question: "Which word means the same as 'difficult'?", options: ["Easy", "Hard", "Simple", "Clear"], answer: "Hard", category: "intelligence" },
+   { question: "If 'APPLE' is coded as 'BQQMF', how is 'LEMON' coded?", options: ["MFNPO", "NFOPQ", "MFOPQ", "NFNPO"], answer: "MFNPO", category: "intelligence" },
+   { question: "Complete the sentence: The puzzle was so  that it took hours to solve.", options: ["Simple", "Complex", "Clear", "Fun"], answer: "Complex", category: "intelligence" },
+   { question: "What is a synonym for 'generous'?", options: ["Selfish", "Kind", "Stingy", "Rude"], answer: "Kind", category: "intelligence" },
+   { question: "Find the odd one out: Pen, Pencil, Marker, Book", options: ["Pen", "Pencil", "Marker", "Book"], answer: "Book", category: "intelligence" },
+   { question: "If 'CLOCK' is coded as 'DMPDL', how is 'WATCH' coded?", options: ["XBUJI", "YCVKJ", "XCVKJ", "YBUJI"], answer: "XBUJI", category: "intelligence" },
+   { question: "What is an antonym for 'happy'?", options: ["Joyful", "Sad", "Excited", "Proud"], answer: "Sad", category: "intelligence" },
+   { question: "Complete the analogy: Foot is to shoe as hand is to ?", options: ["Glove", "Ring", "Watch", "Bracelet"], answer: "Glove", category: "intelligence" },
+   { question: "Which word means the same as 'rapid'?", options: ["Slow", "Fast", "Steady", "Calm"], answer: "Fast", category: "intelligence" },
+   { question: "Find the odd one out: Circle, Square, Triangle, Apple", options: ["Circle", "Square", "Triangle", "Apple"], answer: "Apple", category: "intelligence" },
+   { question: "If 'RIVER' is coded as 'SJWFS', how is 'LAKE' coded?", options: ["MBLF", "NCMG", "MCMG", "NBLF"], answer: "MBLF", category: "intelligence" },
+   { question: "What is a synonym for 'calm'?", options: ["Angry", "Peaceful", "Loud", "Busy"], answer: "Peaceful", category: "intelligence" },
+   { question: "Complete the sentence: His speech was so  that everyone clapped.", options: ["Boring", "Inspiring", "Quiet", "Long"], answer: "Inspiring", category: "intelligence" },
+   { question: "Find the odd one out: Sun, Moon, Star, Cloud", options: ["Sun", "Moon", "Star", "Cloud"], answer: "Cloud", category: "intelligence" },
+   { question: "What is an antonym for 'old'?", options: ["Ancient", "Young", "Worn", "Aged"], answer: "Young", category: "intelligence" },
+   { question: "If 'TIGER' is coded as 'UJHFS', how is 'LION' coded?", options: ["MJPO", "NKPQ", "MJPP", "NKPP"], answer: "MJPO", category: "intelligence" },
+   { question: "Which word means the same as 'honest'?", options: ["Dishonest", "Truthful", "Rude", "Selfish"], answer: "Truthful", category: "intelligence" },
+   { question: "Complete the analogy: Bird is to nest as fish is to ?", options: ["Water", "Coral", "Ocean", "Aquarium"], answer: "Water", category: "intelligence" },
+   { question: "Find the odd one out: Car, Bus, Train, Bicycle", options: ["Car", "Bus", "Train", "Bicycle"], answer: "Bicycle", category: "intelligence" },
+   { question: "What is a synonym for 'brilliant'?", options: ["Dull", "Smart", "Plain", "Simple"], answer: "Smart", category: "intelligence" },
+   { question: "If 'MOUSE' is coded as 'NPVTF', how is 'KEYBOARD' coded?", options: ["LFZCPBSE", "MFADQCTF", "LFADQCTF", "MFZCPBSE"], answer: "LFZCPBSE", category: "intelligence" },
+   { question: "What is an antonym for 'fast'?", options: ["Quick", "Slow", "Rapid", "Swift"], answer: "Slow", category: "intelligence" },
+   { question: "Complete the sentence: The movie was so  that I watched it twice.", options: ["Boring", "Exciting", "Long", "Sad"], answer: "Exciting", category: "intelligence" },
+   { question: "Find the odd one out: Lion, Tiger, Bear, Snake", options: ["Lion", "Tiger", "Bear", "Snake"], answer: "Snake", category: "intelligence" },
+   { question: "Which word means the same as 'tiny'?", options: ["Big", "Small", "Huge", "Large"], answer: "Small", category: "intelligence" },
+   { question: "If 'SUN' is coded as 'TVO', how is 'MOON' coded?", options: ["NPPQ", "OPPQ", "NPPO", "OQQR"], answer: "NPPO", category: "intelligence" },
+   { question: "Complete the analogy: Doctor is to hospital as teacher is to ?", options: ["School", "Library", "Office", "Lab"], answer: "School", category: "intelligence" },
+   { question: "What is a synonym for 'angry'?", options: ["Happy", "Furious", "Calm", "Sad"], answer: "Furious", category: "intelligence" },
+   { question: "Find the odd one out: Spoon, Fork, Knife, Plate", options: ["Spoon", "Fork", "Knife", "Plate"], answer: "Plate", category: "intelligence" },
+   { question: "What is an antonym for 'hot'?", options: ["Warm", "Cold", "Burning", "Scorching"], answer: "Cold", category: "intelligence" },
+   { question: "If 'BAG' is coded as 'CBH', how is 'HAT' coded?", options: ["IBU", "JCV", "ICV", "JBU"], answer: "IBU", category: "intelligence" },
+   { question: "Which word means the same as 'clever'?", options: ["Dull", "Smart", "Slow", "Lazy"], answer: "Smart", category: "intelligence" },
+   { question: "Complete the sentence: The riddle was so  that it stumped everyone.", options: ["Easy", "Tricky", "Clear", "Fun"], answer: "Tricky", category: "intelligence" },
+   { question: "Find the odd one out: Shirt, Pants, Shoes, Hat", options: ["Shirt", "Pants", "Shoes", "Hat"], answer: "Hat", category: "intelligence" },
+   { question: "What is a synonym for 'sad'?", options: ["Happy", "Joyful", "Gloomy", "Excited"], answer: "Gloomy", category: "intelligence" },
+   { question: "If 'CANDLE' is coded as 'DBOEMF', how is 'LAMP' coded?", options: ["MBNQ", "NCPR", "MCPR", "NBNQ"], answer: "MBNQ", category: "intelligence" },
+   { question: "What is an antonym for 'loud'?", options: ["Noisy", "Quiet", "Bright", "Heavy"], answer: "Quiet", category: "intelligence" },
+   { question: "Complete the analogy: Eye is to see as ear is to ?", options: ["Hear", "Touch", "Smell", "Taste"], answer: "Hear", category: "intelligence" },
+   { question: "Find the odd one out: Gold, Silver, Bronze, Wood", options: ["Gold", "Silver", "Bronze", "Wood"], answer: "Wood", category: "intelligence" },
+   { question: "Which word means the same as 'famous'?", options: ["Unknown", "Renowned", "Hidden", "Secret"], answer: "Renowned", category: "intelligence" },
+   { question: "If 'FLOWER' is coded as 'GMPXFS', how is 'GARDEN' coded?", options: ["HBSFOP", "IBUFPO", "HBUFOP", "IBSFPO"], answer: "HBSFOP", category: "intelligence" },
+   { question: "What is a synonym for 'tired'?", options: ["Energetic", "Exhausted", "Active", "Lively"], answer: "Exhausted", category: "intelligence" },
+   { question: "Complete the sentence: The game was so  that everyone cheered.", options: ["Boring", "Thrilling", "Slow", "Quiet"], answer: "Thrilling", category: "intelligence" },
+   { question: "Find the odd one out: Monday, Tuesday, Wednesday, Summer", options: ["Monday", "Tuesday", "Wednesday", "Summer"], answer: "Summer", category: "intelligence" },
+   { question: "What is an antonym for 'rich'?", options: ["Wealthy", "Poor", "Famous", "Strong"], answer: "Poor", category: "intelligence" },
+   { question: "If 'SKY' is coded as 'TLZ', how is 'CLOUD' coded?", options: ["DMPVE", "ENQWF", "DNPWF", "EMPVE"], answer: "DMPVE", category: "intelligence" },
+   { question: "Which word means the same as 'strong'?", options: ["Weak", "Powerful", "Fragile", "Soft"], answer: "Powerful", category: "intelligence" },
+   { question: "Complete the analogy: Car is to road as boat is to ?", options: ["Water", "Sky", "Track", "Path"], answer: "Water", category: "intelligence" },
+   { question: "Find the odd one out: Dog, Cat, Horse, Tree", options: ["Dog", "Cat", "Horse", "Tree"], answer: "Tree", category: "intelligence" },
+   { question: "What is a synonym for 'funny'?", options: ["Serious", "Hilarious", "Sad", "Boring"], answer: "Hilarious", category: "intelligence" },
+   { question: "If 'PHONE' is coded as 'QIPOF', how is 'TABLE' coded?", options: ["UBCMF", "VCDNG", "UCDNG", "VBDMF"], answer: "UBCMF", category: "intelligence" },
+   { question: "What is an antonym for 'clean'?", options: ["Tidy", "Dirty", "Neat", "Spotless"], answer: "Dirty", category: "intelligence" },
+   { question: "Complete the sentence: The story was so  that I couldn’t stop reading.", options: ["Boring", "Gripping", "Long", "Slow"], answer: "Gripping", category: "intelligence" },
+   { question: "Find the odd one out: Red, Blue, Green, Yellow", options: ["Red", "Blue", "Green", "Yellow"], answer: "None", category: "intelligence" },
+   { question: "Which word means the same as 'quiet'?", options: ["Loud", "Silent", "Noisy", "Busy"], answer: "Silent", category: "intelligence" },
+   { question: "If 'MOON' is coded as 'NPPQ', how is 'STAR' coded?", options: ["TUBS", "UVCT", "TUCT", "UVDS"], answer: "TUBS", category: "intelligence" },
+   { question: "Complete the analogy: Sun is to day as moon is to ?", options: ["Night", "Morning", "Evening", "Afternoon"], answer: "Night", category: "intelligence" },
+   { question: "What is a synonym for 'brave'?", options: ["Cowardly", "Fearless", "Timid", "Weak"], answer: "Fearless", category: "intelligence" },
+   { question: "Find the odd one out: January, March, April, Summer", options: ["January", "March", "April", "Summer"], answer: "Summer", category: "intelligence" },
+   { question: "What is an antonym for 'heavy'?", options: ["Light", "Large", "Big", "Strong"], answer: "Light", category: "intelligence" },
+   { question: "If 'BARK' is coded as 'CASL', how is 'MEOW' coded?", options: ["NFQX", "OGRY", "NFPX", "OFRY"], answer: "NFQX", category: "intelligence" },
+   { question: "Which word means the same as 'smart'?", options: ["Dull", "Clever", "Slow", "Lazy"], answer: "Clever", category: "intelligence" },
+   { question: "Complete the sentence: The joke was so  that everyone laughed.", options: ["Boring", "Funny", "Sad", "Long"], answer: "Funny", category: "intelligence" },
+   { question: "Find the odd one out: Tiger, Lion, Cheetah, Elephant", options: ["Tiger", "Lion", "Cheetah", "Elephant"], answer: "Elephant", category: "intelligence" },
+   { question: "What is a synonym for 'large'?", options: ["Small", "Big", "Tiny", "Short"], answer: "Big", category: "intelligence" },
+   { question: "If 'CLOCK' is coded as 'DMPDL', how is 'WATCH' coded?", options: ["XBUJI", "YCVKJ", "XCVKJ", "YBUJI"], answer: "XBUJI", category: "intelligence" },
+   { question: "What is an antonym for 'good'?", options: ["Great", "Bad", "Excellent", "Fine"], answer: "Bad", category: "intelligence" },
+   { question: "Complete the analogy: Pencil is to paper as brush is to ?", options: ["Canvas", "Wall", "Wood", "Glass"], answer: "Canvas", category: "intelligence" },
+   { question: "Find the odd one out: Guitar, Piano, Violin, Drum", options: ["Guitar", "Piano", "Violin", "Drum"], answer: "Drum", category: "intelligence" },
+   { question: "Which word means the same as 'kind'?", options: ["Mean", "Gentle", "Rude", "Harsh"], answer: "Gentle", category: "intelligence" },
+   { question: "If 'DREAM' is coded as 'ESFBN', how is 'SLEEP' coded?", options: ["TMFFQ", "UNFGR", "TMFGR", "UNFFQ"], answer: "TMFFQ", category: "intelligence" },
+   { question: "What is a synonym for 'dangerous'?", options: ["Safe", "Risky", "Secure", "Harmless"], answer: "Risky", category: "intelligence" },
+   { question: "Find the odd one out: Book, Magazine, Newspaper, Pen", options: ["Book", "Magazine", "Newspaper", "Pen"], answer: "Pen", category: "intelligence" },
+   { question: "Complete the sentence: The plan was so ___ that it worked perfectly.", options: ["Flawed", "Brilliant", "Simple", "Slow"], answer: "Brilliant", category: "intelligence" },
+   { question: "What is an antonym for 'tall'?", options: ["High", "Short", "Long", "Wide"], answer: "Short", category: "intelligence" },
+   { question: "Complete the analogy: Clock is to time as thermometer is to ?", options: ["Temperature", "Weather", "Heat", "Cold"], answer: "Temperature", category: "intelligence" },
+   { question: "If 'SMILE' is coded as 'TNJMF', how is 'LAUGH' coded?", options: ["MBVHI", "NCWIJ", "MBWIJ", "NCVHI"], answer: "MBVHI", category: "intelligence" },
+   { question: "Which word means the same as 'pretty'?", options: ["Ugly", "Lovely", "Plain", "Dull"], answer: "Lovely", category: "intelligence" },
+   { question: "Find the odd one out: Apple, Orange, Banana, Carrot", options: ["Apple", "Orange", "Banana", "Carrot"], answer: "Carrot", category: "intelligence" },
+   { question: "What is a synonym for 'strong'?", options: ["Weak", "Mighty", "Soft", "Fragile"], answer: "Mighty", category: "intelligence" },
+   { question: "If 'GLOW' is coded as 'HMPX', how is 'SHINE' coded?", options: ["TIJOF", "UJHPG", "TIHPG", "UJJOF"], answer: "TIJOF", category: "intelligence" },
+   { question: "What is an antonym for 'open'?", options: ["Closed", "Wide", "Free", "Clear"], answer: "Closed", category: "intelligence" },
+   { question: "Complete the sentence: The test was so  that everyone passed.", options: ["Hard", "Easy", "Long", "Boring"], answer: "Easy", category: "intelligence" },
+   { question: "Find the odd one out: Dog, Cat, Rabbit, Car", options: ["Dog", "Cat", "Rabbit", "Car"], answer: "Car", category: "intelligence" },
+   { question: "Which word means the same as 'fast'?", options: ["Slow", "Swift", "Steady", "Calm"], answer: "Swift", category: "intelligence" },
+   { question: "If 'TREE' is coded as 'USFF', how is 'BUSH' coded?", options: ["CVTI", "DWUJ", "CVTJ", "DWVI"], answer: "CVTI", category: "intelligence" },
+   { question: "Complete the analogy: Wheel is to car as propeller is to ?", options: ["Airplane", "Boat", "Train", "Bicycle"], answer: "Airplane", category: "intelligence" },
+   { question: "What is a synonym for 'happy'?", options: ["Sad", "Cheerful", "Angry", "Tired"], answer: "Cheerful", category: "intelligence" },
+   { question: "Find the odd one out: Shirt, Pants, Jacket, Book", options: ["Shirt", "Pants", "Jacket", "Book"], answer: "Book", category: "intelligence" },
+   { question: "What is an antonym for 'dark'?", options: ["Light", "Black", "Gloomy", "Shadow"], answer: "Light", category: "intelligence" },
+   { question: "If 'WIND' is coded as 'XJOE', how is 'RAIN' coded?", options: ["SBJO", "TCJP", "SBJP", "TCIO"], answer: "SBJO", category: "intelligence" },
+   { question: "Which word means the same as 'big'?", options: ["Small", "Large", "Tiny", "Little"], answer: "Large", category: "intelligence" },
+   { question: "Complete the sentence: The magic trick was so  that the audience gasped.", options: ["Boring", "Amazing", "Simple", "Long"], answer: "Amazing", category: "intelligence" },
+   { question: "Find the odd one out: Sun, Moon, Star, Sky", options: ["Sun", "Moon", "Star", "Sky"], answer: "Sky", category: "intelligence" },
+   { question: "What is a synonym for 'clever'?", options: ["Dull", "Intelligent", "Slow", "Lazy"], answer: "Intelligent", category: "intelligence" },
+   { question: "If 'CLOUD' is coded as 'DMPVE', how is 'STORM' coded?", options: ["TUPQN", "UVQRO", "TUPRO", "UVPQN"], answer: "TUPQN", category: "intelligence" },
+   { question: "What is an antonym for 'big'?", options: ["Large", "Small", "Huge", "Great"], answer: "Small", category: "intelligence" },
+   { question: "Complete the analogy: Key is to lock as pen is to ?", options: ["Paper", "Ink", "Book", "Table"], answer: "Paper", category: "intelligence" },
+   { question: "Find the odd one out: Tiger, Lion, Bear, Bird", options: ["Tiger", "Lion", "Bear", "Bird"], answer: "Bird", category: "intelligence" },
+   { question: "Which word means the same as 'calm'?", options: ["Angry", "Serene", "Loud", "Busy"], answer: "Serene", category: "intelligence" },
+   { question: "If 'FIRE' is coded as 'GJAF', how is 'WIND' coded?", options: ["XJOE", "YKPF", "XJPF", "YJOE"], answer: "XJOE", category: "intelligence" },
+   { question: "What is a synonym for 'sad'?", options: ["Happy", "Sorrowful", "Excited", "Joyful"], answer: "Sorrowful", category: "intelligence" },
+   { question: "Complete the sentence: The adventure was so  that I’ll never forget it.", options: ["Boring", "Thrilling", "Slow", "Quiet"], answer: "Thrilling", category: "intelligence" },
+   { question: "Find the odd one out: Apple, Banana, Orange, Table", options: ["Apple", "Banana", "Orange", "Table"], answer: "Table", category: "intelligence" },
+   { question: "What is an antonym for 'fast'?", options: ["Quick", "Slow", "Rapid", "Swift"], answer: "Slow", category: "intelligence" },
+   { question: "If 'MOON' is coded as 'NPPO', how is 'STAR' coded?", options: ["TUBS", "UVCT", "TUCT", "UVDS"], answer: "TUBS", category: "intelligence" },
+   { question: "Which word means the same as 'brave'?", options: ["Cowardly", "Valiant", "Timid", "Weak"], answer: "Valiant", category: "intelligence" },
+   { question: "Complete the analogy: Shoe is to foot as helmet is to ?", options: ["Head", "Hand", "Leg", "Arm"], answer: "Head", category: "intelligence" },
+   { question: "Find the odd one out: Red, Blue, Green, Yellow", options: ["Red", "Blue", "Green", "Yellow"], answer: "None", category: "intelligence" },
+   { question: "What is a synonym for 'funny'?", options: ["Serious", "Amusing", "Sad", "Boring"], answer: "Amusing", category: "intelligence" },
+   { question: "If 'BARK' is coded as 'CASL', how is 'MEOW' coded?", options: ["NFQX", "OGRY", "NFPX", "OFRY"], answer: "NFQX", category: "intelligence" },
+   { question: "What is an antonym for 'hot'?", options: ["Warm", "Cold", "Burning", "Scorching"], answer: "Cold", category: "intelligence" },
+   { question: "Complete the sentence: The speech was so  that it moved everyone.", options: ["Boring", "Inspiring", "Long", "Quiet"], answer: "Inspiring", category: "intelligence" },
+   { question: "Find the odd one out: Cat, Dog, Horse, Car", options: ["Cat", "Dog", "Horse", "Car"], answer: "Car", category: "intelligence" },
+   { question: "Which word means the same as 'large'?", options: ["Small", "Huge", "Tiny", "Little"], answer: "Huge", category: "intelligence" },
+   { question: "If 'CANDLE' is coded as 'DBOEMF', how is 'LAMP' coded?", options: ["MBNQ", "NCPR", "MCPR", "NBNQ"], answer: "MBNQ", category: "intelligence" },
+   { question: "What is a synonym for 'tired'?", options: ["Energetic", "Weary", "Active", "Lively"], answer: "Weary", category: "intelligence" },
+   { question: "Complete the analogy: Book is to library as food is to ?", options: ["Kitchen", "Bedroom", "Garden", "Office"], answer: "Kitchen", category: "intelligence" },
+   { question: "Find the odd one out: Sun, Moon, Star, Cloud", options: ["Sun", "Moon", "Star", "Cloud"], answer: "Cloud", category: "intelligence" },
+   { question: "What is an antonym for 'happy'?", options: ["Joyful", "Sad", "Excited", "Proud"], answer: "Sad", category: "intelligence" },
+   { question: "If 'RIVER' is coded as 'SJWFS', how is 'LAKE' coded?", options: ["MBLF", "NCMG", "MCMG", "NBLF"], answer: "MBLF", category: "intelligence" },
+   { question: "Which word means the same as 'strong'?", options: ["Weak", "Sturdy", "Soft", "Fragile"], answer: "Sturdy", category: "intelligence" },
+   { question: "Complete the sentence: The game was so  that everyone joined in.", options: ["Boring", "Exciting", "Slow", "Quiet"], answer: "Exciting", category: "intelligence" },
+   { question: "Find the odd one out: Monday, Tuesday, Wednesday, Summer", options: ["Monday", "Tuesday", "Wednesday", "Summer"], answer: "Summer", category: "intelligence" },
+   { question: "What is a synonym for 'clever'?", options: ["Dull", "Bright", "Slow", "Lazy"], answer: "Bright", category: "intelligence" },
+   { question: "If 'SKY' is coded as 'TLZ', how is 'CLOUD' coded?", options: ["DMPVE", "ENQWF", "DNPWF", "EMPVE"], answer: "DMPVE", category: "intelligence" },
+   { question: "What is an antonym for 'rich'?", options: ["Wealthy", "Poor", "Famous", "Strong"], answer: "Poor", category: "intelligence" },
+   { question: "Complete the analogy: Car is to road as plane is to ?", options: ["Sky", "Runway", "Track", "Path"], answer: "Sky", category: "intelligence" },
+   { question: "Find the odd one out: Dog, Cat, Horse, Tree", options: ["Dog", "Cat", "Horse", "Tree"], answer: "Tree", category: "intelligence" },
+   { question: "Which word means the same as 'funny'?", options: ["Serious", "Comical", "Sad", "Boring"], answer: "Comical", category: "intelligence" },
+   { question: "If 'PHONE' is coded as 'QIPOF', how is 'TABLE' coded?", options: ["UBCMF", "VCDNG", "UCDNG", "VBDMF"], answer: "UBCMF", category: "intelligence" },
+   { question: "What is a synonym for 'brave'?", options: ["Cowardly", "Courageous", "Timid", "Weak"], answer: "Courageous", category: "intelligence" },
+   { question: "Complete the sentence: The book was so  that I read it in one day.", options: ["Boring", "Engaging", "Long", "Slow"], answer: "Engaging", category: "intelligence" },
+   { question: "Find the odd one out: Tiger, Lion, Cheetah, Elephant", options: ["Tiger", "Lion", "Cheetah", "Elephant"], answer: "Elephant", category: "intelligence" },
+   { question: "What is an antonym for 'clean'?", options: ["Tidy", "Dirty", "Neat", "Spotless"], answer: "Dirty", category: "intelligence" },
+   { question: "If 'CLOCK' is coded as 'DMPDL', how is 'WATCH' coded?", options: ["XBUJI", "YCVKJ", "XCVKJ", "YBUJI"], answer: "XBUJI", category: "intelligence" },
+   { question: "Which word means the same as 'kind'?", options: ["Mean", "Compassionate", "Rude", "Harsh"], answer: "Compassionate", category: "intelligence" },
+   { question: "Complete the analogy: Pencil is to paper as brush is to ?", options: ["Canvas", "Wall", "Wood", "Glass"], answer: "Canvas", category: "intelligence" },
+   { question: "Find the odd one out: Guitar, Piano, Violin, Drum", options: ["Guitar", "Piano", "Violin", "Drum"], answer: "Drum", category: "intelligence" },
+   { question: "What is a synonym for 'large'?", options: ["Small", "Vast", "Tiny", "Little"], answer: "Vast", category: "intelligence" },
+   { question: "If 'BARK' is coded as 'CASL', how is 'MEOW' coded?", options: ["NFQX", "OGRY", "NFPX", "OFRY"], answer: "NFQX", category: "intelligence" },
+   { question: "What is an antonym for 'good'?", options: ["Great", "Bad", "Excellent", "Fine"], answer: "Bad", category: "intelligence" },
+   { question: "Complete the sentence: The movie was so  that I watched it twice.", options: ["Boring", "Captivating", "Long", "Slow"], answer: "Captivating", category: "intelligence" },
+   { question: "Find the odd one out: Red, Blue, Green, Yellow", options: ["Red", "Blue", "Green", "Yellow"], answer: "None", category: "intelligence" },
+   { question: "Which word means the same as 'quiet'?", options: ["Loud", "Silent", "Noisy", "Busy"], answer: "Silent", category: "intelligence" },
+   { question: "If 'MOON' is coded as 'NPPO', how is 'STAR' coded?", options: ["TUBS", "UVCT", "TUCT", "UVDS"], answer: "TUBS", category: "intelligence" },
+   { question: "Complete the analogy: Sun is to day as moon is to ?", options: ["Night", "Morning", "Evening", "Afternoon"], answer: "Night", category: "intelligence" },
+   { question: "What is a synonym for 'brave'?", options: ["Cowardly", "Fearless", "Timid", "Weak"], answer: "Fearless", category: "intelligence" },
+   { question: "Find the odd one out: January, March, April, Summer", options: ["January", "March", "April", "Summer"], answer: "Summer", category: "intelligence" },
+   { question: "What is an antonym for 'heavy'?", options: ["Light", "Large", "Big", "Strong"], answer: "Light", category: "intelligence" },
+   { question: "If 'BARK' is coded as 'CASL', how is 'MEOW' coded?", options: ["NFQX", "OGRY", "NFPX", "OFRY"], answer: "NFQX", category: "intelligence" },
+   { question: "Which word means the same as 'smart'?", options: ["Dull", "Clever", "Slow", "Lazy"], answer: "Clever", category: "intelligence" },
+   { question: "Complete the sentence: The joke was so  that everyone laughed.", options: ["Boring", "Funny", "Sad", "Long"], answer: "Funny", category: "intelligence" },
+   { question: "Find the odd one out: Tiger, Lion, Cheetah, Elephant", options: ["Tiger", "Lion", "Cheetah", "Elephant"], answer: "Elephant", category: "intelligence" },
+   { question: "What is a synonym for 'large'?", options: ["Small", "Big", "Tiny", "Short"], answer: "Big", category: "intelligence" },
+   { question: "If 'CLOCK' is coded as 'DMPDL', how is 'WATCH' coded?", options: ["XBUJI", "YCVKJ", "XCVKJ", "YBUJI"], answer: "XBUJI", category: "intelligence" },
+   { question: "What is an antonym for 'good'?", options: ["Great", "Bad", "Excellent", "Fine"], answer: "Bad", category: "intelligence" },
+   { question: "Complete the analogy: Pencil is to paper as brush is to ?", options: ["Canvas", "Wall", "Wood", "Glass"], answer: "Canvas", category: "intelligence" },
+   { question: "Find the odd one out: Guitar, Piano, Violin, Drum", options: ["Guitar", "Piano", "Violin", "Drum"], answer: "Drum", category: "intelligence" },
+   { question: "Which word means the same as 'kind'?", options: ["Mean", "Gentle", "Rude", "Harsh"], answer: "Gentle", category: "intelligence" },
+   { question: "What is the SI unit of energy?", options: ["Joule", "Newton", "Watt", "Pascal"], answer: "Joule", category: "mixed" },
+   { question: "Which force keeps planets in orbit around the Sun?", options: ["Magnetic", "Gravitational", "Frictional", "Electrostatic"], answer: "Gravitational", category: "mixed" },
+   { question: "What is the unit of frequency?", options: ["Hertz", "Joule", "Newton", "Volt"], answer: "Hertz", category: "mixed" },
+   { question: "Which type of energy is stored in a stretched spring?", options: ["Kinetic", "Potential", "Thermal", "Chemical"], answer: "Potential", category: "mixed" },
+   { question: "What is the formula for speed?", options: ["Distance/Time", "Time/Distance", "Force/Mass", "Mass/Force"], answer: "Distance/Time", category: "mixed" },
+   { question: "Which color of light has the highest wavelength?", options: ["Red", "Blue", "Green", "Violet"], answer: "Red", category: "mixed" },
+   { question: "What is the SI unit of electric current?", options: ["Ampere", "Volt", "Ohm", "Watt"], answer: "Ampere", category: "mixed" },
+   { question: "What causes sound waves?", options: ["Vibration", "Light", "Heat", "Gravity"], answer: "Vibration", category: "mixed" },
+   { question: "Which mirror forms a virtual image?", options: ["Concave", "Convex", "Plane", "Spherical"], answer: "Plane", category: "mixed" },
+   { question: "What is the unit of work?", options: ["Joule", "Newton", "Watt", "Pascal"], answer: "Joule", category: "mixed" },
+   { question: "What is the law of conservation of energy?", options: ["Energy cannot be created or destroyed", "Energy can be created", "Energy can be destroyed", "Energy is constant"], answer: "Energy cannot be created or destroyed", category: "mixed" },
+   { question: "Which particle has no charge?", options: ["Proton", "Electron", "Neutron", "Ion"], answer: "Neutron", category: "mixed" },
+   { question: "What is the speed of sound in air?", options: ["343 m/s", "300 m/s", "400 m/s", "500 m/s"], answer: "343 m/s", category: "mixed" },
+   { question: "Which type of lens diverges light rays?", options: ["Convex", "Concave", "Plano", "Bifocal"], answer: "Concave", category: "mixed" },
+   { question: "What is the unit of resistance?", options: ["Ohm", "Volt", "Ampere", "Watt"], answer: "Ohm", category: "mixed" },
+   { question: "What is the formula for kinetic energy?", options: ["1/2 mv²", "mv", "mgh", "F x d"], answer: "1/2 mv²", category: "mixed" },
+   { question: "Which phenomenon splits light into colors?", options: ["Reflection", "Refraction", "Dispersion", "Diffraction"], answer: "Dispersion", category: "mixed" },
+   { question: "What is the SI unit of temperature?", options: ["Kelvin", "Celsius", "Fahrenheit", "Joule"], answer: "Kelvin", category: "mixed" },
+   { question: "Which type of wave is sound?", options: ["Transverse", "Longitudinal", "Electromagnetic", "Surface"], answer: "Longitudinal", category: "mixed" },
+   { question: "What is the unit of power?", options: ["Watt", "Joule", "Newton", "Pascal"], answer: "Watt", category: "mixed" },
+   { question: "What is the chemical symbol for iron?", options: ["Fe", "Au", "Ag", "Cu"], answer: "Fe", category: "mixed" },
+   { question: "Which gas is most abundant in Earth’s atmosphere?", options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Helium"], answer: "Nitrogen", category: "mixed" },
+   { question: "What is the pH of an acidic solution?", options: ["Less than 7", "7", "More than 7", "14"], answer: "Less than 7", category: "mixed" },
+   { question: "Which element has the atomic number 8?", options: ["Oxygen", "Nitrogen", "Carbon", "Hydrogen"], answer: "Oxygen", category: "mixed" },
+   { question: "What type of bond shares electrons?", options: ["Ionic", "Covalent", "Metallic", "Hydrogen"], answer: "Covalent", category: "mixed" },
+   { question: "What is the chemical formula for carbon dioxide?", options: ["CO₂", "CO", "C₂O", "O₂C"], answer: "CO₂", category: "mixed" },
+   { question: "Which element is a noble gas?", options: ["Helium", "Hydrogen", "Oxygen", "Nitrogen"], answer: "Helium", category: "mixed" },
+   { question: "What is the main component of air?", options: ["Nitrogen", "Oxygen", "Carbon Dioxide", "Argon"], answer: "Nitrogen", category: "mixed" },
+   { question: "Which acid is used in car batteries?", options: ["Sulfuric Acid", "Hydrochloric Acid", "Nitric Acid", "Acetic Acid"], answer: "Sulfuric Acid", category: "mixed" },
+   { question: "What is the atomic number of oxygen?", options: ["8", "6", "7", "9"], answer: "8", category: "mixed" },
+   { question: "Which substance turns blue litmus paper red?", options: ["Acid", "Base", "Salt", "Neutral"], answer: "Acid", category: "mixed" },
+   { question: "What is the chemical symbol for sodium?", options: ["Na", "K", "Ca", "Mg"], answer: "Na", category: "mixed" },
+   { question: "Which gas is used in balloons to make them float?", options: ["Helium", "Hydrogen", "Nitrogen", "Oxygen"], answer: "Helium", category: "mixed" },
+   { question: "What is the formula for table salt?", options: ["NaCl", "KCl", "MgCl₂", "CaCl₂"], answer: "NaCl", category: "mixed" },
+   { question: "Which element is essential for combustion?", options: ["Oxygen", "Nitrogen", "Carbon", "Hydrogen"], answer: "Oxygen", category: "mixed" },
+   { question: "What is the pH of a basic solution?", options: ["More than 7", "7", "Less than 7", "0"], answer: "More than 7", category: "mixed" },
+   { question: "Which element has the symbol 'Ag'?", options: ["Silver", "Gold", "Iron", "Copper"], answer: "Silver", category: "mixed" },
+   { question: "What is the chemical formula for ammonia?", options: ["NH₃", "NO₂", "N₂O", "NH₄"], answer: "NH₃", category: "mixed" },
+   { question: "Which gas is known as laughing gas?", options: ["Nitrous Oxide", "Carbon Dioxide", "Oxygen", "Nitrogen"], answer: "Nitrous Oxide", category: "mixed" },
+   { question: "What is the atomic number of hydrogen?", options: ["1", "2", "3", "4"], answer: "1", category: "mixed" },
+   { question: "What is the control center of the cell?", options: ["Nucleus", "Mitochondrion", "Ribosome", "Golgi Apparatus"], answer: "Nucleus", category: "mixed" },
+   { question: "Which process breaks down glucose to produce energy?", options: ["Photosynthesis", "Respiration", "Transpiration", "Fermentation"], answer: "Respiration", category: "mixed" },
+   { question: "What is the main function of white blood cells?", options: ["Fight infection", "Carry oxygen", "Clot blood", "Digest food"], answer: "Fight infection", category: "mixed" },
+   { question: "Which biomolecule is the main source of energy?", options: ["Carbohydrate", "Protein", "Lipid", "Nucleic Acid"], answer: "Carbohydrate", category: "mixed" },
+   { question: "What is the largest bone in the human body?", options: ["Femur", "Skull", "Spine", "Humerus"], answer: "Femur", category: "mixed" },
+   { question: "Which gas is used by plants during photosynthesis?", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: "Carbon Dioxide", category: "mixed" },
+   { question: "What is the smallest unit of life?", options: ["Cell", "Tissue", "Organ", "System"], answer: "Cell", category: "mixed" },
+   { question: "Which part of the brain controls memory?", options: ["Hippocampus", "Cerebellum", "Medulla", "Hypothalamus"], answer: "Hippocampus", category: "mixed" },
+   { question: "What is the primary function of the liver?", options: ["Detoxification", "Digestion", "Pumping blood", "Breathing"], answer: "Detoxification", category: "mixed" },
+   { question: "Which type of blood vessel carries blood to the heart?", options: ["Vein", "Artery", "Capillary", "Venule"], answer: "Vein", category: "mixed" },
+   { question: "What is the scientific name for the kneecap?", options: ["Patella", "Femur", "Tibia", "Fibula"], answer: "Patella", category: "mixed" },
+   { question: "Which molecule is the main component of cell membranes?", options: ["Lipid", "Protein", "Carbohydrate", "Nucleic Acid"], answer: "Lipid", category: "mixed" },
+   { question: "Which organ produces insulin?", options: ["Pancreas", "Liver", "Kidney", "Stomach"], answer: "Pancreas", category: "mixed" },
+   { question: "What is the process of cell division called?", options: ["Mitosis", "Meiosis", "Photosynthesis", "Respiration"], answer: "Mitosis", category: "mixed" },
+   { question: "Which gas is exhaled by humans?", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Helium"], answer: "Carbon Dioxide", category: "mixed" },
+   { question: "What is the function of chlorophyll?", options: ["Absorb light", "Store energy", "Transport water", "Produce oxygen"], answer: "Absorb light", category: "mixed" },
+   { question: "Which organ is responsible for pumping blood?", options: ["Heart", "Lung", "Liver", "Kidney"], answer: "Heart", category: "mixed" },
+   { question: "What is the main function of the lungs?", options: ["Breathing", "Digestion", "Circulation", "Filtration"], answer: "Breathing", category: "mixed" },
+   { question: "Which part of the plant conducts water?", options: ["Xylem", "Phloem", "Stomata", "Root"], answer: "Xylem", category: "mixed" },
+   { question: "What is the genetic material in viruses?", options: ["DNA or RNA", "Protein", "Lipid", "Carbohydrate"], answer: "DNA or RNA", category: "mixed" },
+   { question: "Which word is a noun?", options: ["Run", "Big", "Table", "Quickly"], answer: "Table", category: "mixed" },
+   { question: "What is the past tense of 'go'?", options: ["Goes", "Went", "Gone", "Going"], answer: "Went", category: "mixed" },
+   { question: "Which sentence is in the passive voice?", options: ["The dog chased the cat.", "The cat was chased by the dog.", "The cat runs fast.", "The dog barks loudly."], answer: "The cat was chased by the dog.", category: "mixed" },
+   { question: "What is the plural form of 'mouse'?", options: ["Mouses", "Mice", "Mouse", "Mices"], answer: "Mice", category: "mixed" },
+   { question: "Which word is an adjective?", options: ["Quick", "Run", "Book", "Slowly"], answer: "Quick", category: "mixed" },
+   { question: "What is the comparative form of 'good'?", options: ["Better", "Best", "Gooder", "More good"], answer: "Better", category: "mixed" },
+   { question: "Which punctuation mark ends a declarative sentence?", options: ["Period", "Comma", "Question Mark", "Exclamation Point"], answer: "Period", category: "mixed" },
+   { question: "What is the object in the sentence 'She kicked the ball'?", options: ["She", "Kicked", "The ball", "None"], answer: "The ball", category: "mixed" },
+   { question: "Which sentence has correct subject-verb agreement?", options: ["The dog run fast.", "The dogs runs fast.", "The dogs run fast.", "The dog runs fastly."], answer: "The dogs run fast.", category: "mixed" },
+   { question: "What is the superlative form of 'small'?", options: ["Smaller", "Smallest", "More small", "Most small"], answer: "Smallest", category: "mixed" },
+   { question: "What is the second pillar of Islam?", options: ["Salah", "Zakat", "Sawm", "Hajj"], answer: "Salah", category: "mixed" },
+   { question: "In which month do Muslims fast?", options: ["Ramadan", "Muharram", "Dhul-Hijjah", "Rabi' al-Awwal"], answer: "Ramadan", category: "mixed" },
+   { question: "What is the direction Muslims face during prayer?", options: ["Qibla", "Kaaba", "Mecca", "Medina"], answer: "Qibla", category: "mixed" },
+   { question: "Who was the second caliph of Islam?", options: ["Umar", "Abu Bakr", "Uthman", "Ali"], answer: "Umar", category: "mixed" },
+   { question: "Which prophet built the Kaaba?", options: ["Ibrahim", "Musa", "Isa", "Yusuf"], answer: "Ibrahim", category: "mixed" },
+   { question: "What is the Islamic term for charity?", options: ["Zakat", "Sadaqah", "Hajj", "Sawm"], answer: "Zakat", category: "mixed" },
+   { question: "Which city is home to the Prophet’s Mosque?", options: ["Madinah", "Makkah", "Jerusalem", "Cairo"], answer: "Madinah", category: "mixed" },
+   { question: "What is the name of the Islamic holy month of pilgrimage?", options: ["Dhul-Hijjah", "Ramadan", "Muharram", "Rabi' al-Awwal"], answer: "Dhul-Hijjah", category: "mixed" },
+   { question: "Which angel is known as the gatekeeper of Hell?", options: ["Malik", "Jibril", "Mikail", "Israfil"], answer: "Malik", category: "mixed" },
+   { question: "What is the Islamic term for the declaration of faith?", options: ["Shahada", "Salah", "Zakat", "Sawm"], answer: "Shahada", category: "mixed" },
+   { question: "What is the process of water loss in plants called?", options: ["Transpiration", "Photosynthesis", "Respiration", "Fermentation"], answer: "Transpiration", category: "mixed" },
+   { question: "Which organ system controls hormones?", options: ["Endocrine", "Nervous", "Circulatory", "Digestive"], answer: "Endocrine", category: "mixed" },
+   { question: "What is the main function of the small intestine?", options: ["Nutrient absorption", "Water filtration", "Blood circulation", "Oxygen exchange"], answer: "Nutrient absorption", category: "mixed" },
+   { question: "Which molecule is the primary energy currency of cells?", options: ["ATP", "DNA", "RNA", "Glucose"], answer: "ATP", category: "mixed" },
+   { question: "What is the scientific name for the thigh bone?", options: ["Femur", "Humerus", "Tibia", "Radius"], answer: "Femur", category: "mixed" },
+   { question: "Which part of the plant carries nutrients?", options: ["Phloem", "Xylem", "Stomata", "Root"], answer: "Phloem", category: "mixed" },
+   { question: "What is the main function of the pancreas?", options: ["Regulate blood sugar", "Filter blood", "Produce bile", "Pump blood"], answer: "Regulate blood sugar", category: "mixed" },
+   { question: "Which process converts nitrogen gas into usable compounds?", options: ["Nitrogen fixation", "Photosynthesis", "Respiration", "Transpiration"], answer: "Nitrogen fixation", category: "mixed" },
+   { question: "What is the largest organ in the human body?", options: ["Skin", "Liver", "Heart", "Lung"], answer: "Skin", category: "mixed" },
+   { question: "Which molecule is responsible for photosynthesis?", options: ["Chlorophyll", "Hemoglobin", "Insulin", "Glucose"], answer: "Chlorophyll", category: "mixed" },
+   { question: "Which word is a pronoun?", options: ["She", "Run", "Big", "Table"], answer: "She", category: "mixed" },
+   { question: "What is the past tense of 'write'?", options: ["Wrote", "Written", "Writing", "Writes"], answer: "Wrote", category: "mixed" },
+   { question: "Which sentence is in the active voice?", options: ["The book was read by the student.", "The student read the book.", "The book is being read.", "The book will be read."], answer: "The student read the book.", category: "mixed" },
+   { question: "What is the plural form of 'deer'?", options: ["Deers", "Deer", "Deeres", "Deeren"], answer: "Deer", category: "mixed" },
+   { question: "Which word is an adverb?", options: ["Quickly", "Quick", "Book", "Table"], answer: "Quickly", category: "mixed" },
+   { question: "What is the superlative form of 'good'?", options: ["Best", "Better", "Goodest", "More good"], answer: "Best", category: "mixed" },
+   { question: "Which punctuation mark is used to introduce a list?", options: ["Colon", "Comma", "Semicolon", "Period"], answer: "Colon", category: "mixed" },
+   { question: "What is the subject in the sentence 'The cat climbed the tree'?", options: ["The cat", "Climbed", "The tree", "None"], answer: "The cat", category: "mixed" },
+   { question: "Which sentence uses correct subject-verb agreement?", options: ["The children is playing.", "The children are playing.", "The child are playing.", "The children plays."], answer: "The children are playing.", category: "mixed" },
+   { question: "What is the comparative form of 'small'?", options: ["Smaller", "Smallest", "More small", "Most small"], answer: "Smaller", category: "mixed" },
+   { question: "Which word is a conjunction?", options: ["And", "Run", "Big", "Table"], answer: "And", category: "mixed" },
+   { question: "What is the past participle of 'see'?", options: ["Saw", "Seen", "Seeing", "Sees"], answer: "Seen", category: "mixed" },
+   { question: "Which sentence is in the future tense?", options: ["She walks to school.", "She walked to school.", "She will walk to school.", "She is walking to school."], answer: "She will walk to school.", category: "mixed" },
+   { question: "What is the plural form of 'knife'?", options: ["Knifes", "Knives", "Knife", "Knivess"], answer: "Knives", category: "mixed" },
+   { question: "Which word is an adjective?", options: ["Beautiful", "Run", "Book", "Quickly"], answer: "Beautiful", category: "mixed" },
+   { question: "What is the comparative form of 'bad'?", options: ["Worse", "Worst", "Badder", "More bad"], answer: "Worse", category: "mixed" },
+   { question: "Which punctuation mark indicates a pause?", options: ["Comma", "Period", "Question Mark", "Exclamation Point"], answer: "Comma", category: "mixed" },
+   { question: "What is the object in the sentence 'He kicked the ball'?", options: ["He", "Kicked", "The ball", "None"], answer: "The ball", category: "mixed" },
+   { question: "Which sentence uses correct pronoun agreement?", options: ["Each student must submit their homework.", "Each student must submit his or her homework.", "Each student must submit its homework.", "Each student must submits their homework."], answer: "Each student must submit his or her homework.", category: "mixed" },
+   { question: "What is the superlative form of 'big'?", options: ["Bigger", "Biggest", "More big", "Most big"], answer: "Biggest", category: "mixed" },
+   { question: "What is the first pillar of Islam?", options: ["Shahada", "Salah", "Zakat", "Sawm"], answer: "Shahada", category: "mixed" },
+   { question: "In which city is the Kaaba located?", options: ["Makkah", "Madinah", "Jerusalem", "Cairo"], answer: "Makkah", category: "mixed" },
+   { question: "What is the Islamic term for fasting?", options: ["Sawm", "Salah", "Zakat", "Hajj"], answer: "Sawm", category: "mixed" },
+   { question: "Who was the third caliph of Islam?", options: ["Uthman", "Abu Bakr", "Umar", "Ali"], answer: "Uthman", category: "mixed" },
+   { question: "Which prophet received the Torah?", options: ["Musa", "Ibrahim", "Isa", "Yusuf"], answer: "Musa", category: "mixed" },
+   { question: "What is the Islamic term for voluntary charity?", options: ["Sadaqah", "Zakat", "Hajj", "Sawm"], answer: "Sadaqah", category: "mixed" },
+   { question: "Which mosque is the second holiest in Islam?", options: ["Masjid al-Nabawi", "Masjid al-Haram", "Al-Aqsa Mosque", "Masjid al-Qiblatayn"], answer: "Masjid al-Nabawi", category: "mixed" },
+   { question: "What is the name of the Islamic pilgrimage performed outside Hajj?", options: ["Umrah", "Hajj", "Jihad", "Salah"], answer: "Umrah", category: "mixed" },
+   { question: "Which angel is known as the gatekeeper of Paradise?", options: ["Ridwan", "Jibril", "Mikail", "Israfil"], answer: "Ridwan", category: "mixed" },
+   { question: "What is the Islamic term for daily prayers?", options: ["Salah", "Zakat", "Sawm", "Hajj"], answer: "Salah", category: "mixed" },
+   { question: "Which prophet is known as the 'Friend of Allah'?", options: ["Ibrahim", "Musa", "Isa", "Yusuf"], answer: "Ibrahim", category: "mixed" },
+   { question: "What is the name of the Islamic holy book?", options: ["Qur'an", "Torah", "Bible", "Vedas"], answer: "Qur'an", category: "mixed" },
+   { question: "Which month is the holiest in Islam?", options: ["Ramadan", "Muharram", "Dhul-Hijjah", "Rabi' al-Awwal"], answer: "Ramadan", category: "mixed" },
+   { question: "Who was the fourth caliph of Islam?", options: ["Ali", "Abu Bakr", "Umar", "Uthman"], answer: "Ali", category: "mixed" },
+   { question: "Which prophet received the Gospel?", options: ["Isa", "Musa", "Ibrahim", "Yusuf"], answer: "Isa", category: "mixed" },
+   { question: "What is the Islamic term for pilgrimage to Makkah?", options: ["Hajj", "Umrah", "Jihad", "Salah"], answer: "Hajj", category: "mixed" },
+   { question: "Which angel is responsible for delivering revelations?", options: ["Jibril", "Mikail", "Israfil", "Malik"], answer: "Jibril", category: "mixed" },
+   { question: "What is the name of the night journey of Prophet Muhammad (PBUH)?", options: ["Isra and Mi'raj", "Laylat al-Qadr", "Laylat al-Bara'ah", "Hajj"], answer: "Isra and Mi'raj", category: "mixed" },
+   { question: "Which city is known as the 'City of the Prophet'?", options: ["Madinah", "Makkah", "Jerusalem", "Cairo"], answer: "Madinah", category: "mixed" },
+   { question: "What is the Islamic term for the declaration of faith?", options: ["Shahada", "Salah", "Zakat", "Sawm"], answer: "Shahada", category: "mixed" },
+   { question: "What is the unit of electric potential?", options: ["Volt", "Ampere", "Ohm", "Watt"], answer: "Volt", category: "mixed" },
+   { question: "Which type of wave requires a medium to travel?", options: ["Mechanical", "Electromagnetic", "Transverse", "Longitudinal"], answer: "Mechanical", category: "mixed" },
+   { question: "What is the formula for momentum?", options: ["mv", "1/2 mv²", "mgh", "F x d"], answer: "mv", category: "mixed" },
+   { question: "Which phenomenon causes the bending of light around edges?", options: ["Diffraction", "Reflection", "Refraction", "Dispersion"], answer: "Diffraction", category: "mixed" },
+   { question: "What is the unit of magnetic flux?", options: ["Weber", "Tesla", "Gauss", "Joule"], answer: "Weber", category: "mixed" },
+   { question: "Which type of mirror is used in car side mirrors?", options: ["Convex", "Concave", "Plane", "Spherical"], answer: "Convex", category: "mixed" },
+   { question: "What is the formula for power?", options: ["Work/Time", "Force x Distance", "Mass x Acceleration", "Energy x Time"], answer: "Work/Time", category: "mixed" },
+   { question: "Which particle is responsible for electricity?", options: ["Electron", "Proton", "Neutron", "Photon"], answer: "Electron", category: "mixed" },
+   { question: "What is the unit of capacitance?", options: ["Farad", "Ohm", "Volt", "Ampere"], answer: "Farad", category: "mixed" },
+   { question: "Which law states that total energy is conserved?", options: ["Law of Conservation of Energy", "Newton's First Law", "Newton's Second Law", "Law of Gravitation"], answer: "Law of Conservation of Energy", category: "mixed" },
+   { question: "What is the chemical symbol for calcium?", options: ["Ca", "K", "Na", "Mg"], answer: "Ca", category: "mixed" },
+   { question: "Which gas is used in welding?", options: ["Acetylene", "Oxygen", "Nitrogen", "Carbon Dioxide"], answer: "Acetylene", category: "mixed" },
+   { question: "What is the pH of pure water?", options: ["7", "0", "14", "10"], answer: "7", category: "mixed" },
+   { question: "Which element has the atomic number 12?", options: ["Magnesium", "Calcium", "Sodium", "Potassium"], answer: "Magnesium", category: "mixed" },
+   { question: "What type of bond is found in metals?", options: ["Metallic", "Ionic", "Covalent", "Hydrogen"], answer: "Metallic", category: "mixed" },
+   { question: "What is the chemical formula for ethanol?", options: ["C₂H₅OH", "CH₃OH", "C₃H₇OH", "C₄H₉OH"], answer: "C₂H₅OH", category: "mixed" },
+   { question: "Which element is a noble gas?", options: ["Argon", "Sodium", "Chlorine", "Potassium"], answer: "Argon", category: "mixed" },
+   { question: "What is the main component of glass?", options: ["Silica", "Calcium Carbonate", "Sodium Chloride", "Magnesium Oxide"], answer: "Silica", category: "mixed" },
+   { question: "Which acid is found in lemon juice?", options: ["Citric Acid", "Hydrochloric Acid", "Sulfuric Acid", "Nitric Acid"], answer: "Citric Acid", category: "mixed" },
+   { question: "What is the atomic number of sodium?", options: ["11", "12", "13", "14"], answer: "11", category: "mixed" },
+   { question: "Which word is a noun?", options: ["Run", "Big", "House", "Quickly"], answer: "House", category: "grammar" },
+   { question: "What is the past tense of 'sing'?", options: ["Sang", "Sung", "Singing", "Sings"], answer: "Sang", category: "grammar" },
+   { question: "Which sentence is in the passive voice?", options: ["The dog chased the cat.", "The cat was chased by the dog.", "The cat runs fast.", "The dog barks loudly."], answer: "The cat was chased by the dog.", category: "grammar" },
+   { question: "What is the plural form of 'child'?", options: ["Children", "Childs", "Childes", "Childrens"], answer: "Children", category: "grammar" },
+   { question: "Which word is an adverb?", options: ["Quickly", "Quick", "Book", "Table"], answer: "Quickly", category: "grammar" },
+   { question: "What is the superlative form of 'good'?", options: ["Best", "Better", "Goodest", "More good"], answer: "Best", category: "grammar" },
+   { question: "Which punctuation mark is used to separate items in a list?", options: ["Comma", "Period", "Semicolon", "Colon"], answer: "Comma", category: "grammar" },
+   { question: "What is the subject in the sentence 'The dog barked loudly'?", options: ["The dog", "Barked", "Loudly", "None"], answer: "The dog", category: "grammar" },
+   { question: "Which sentence uses correct subject-verb agreement?", options: ["The boys is playing.", "The boys are playing.", "The boy are playing.", "The boys plays."], answer: "The boys are playing.", category: "grammar" },
+   { question: "What is the comparative form of 'small'?", options: ["Smaller", "Smallest", "More small", "Most small"], answer: "Smaller", category: "grammar" },
+   { question: "Which word is a conjunction?", options: ["And", "Run", "Big", "Table"], answer: "And", category: "grammar" },
+   { question: "What is the past participle of 'go'?", options: ["Went", "Gone", "Going", "Goes"], answer: "Gone", category: "grammar" },
+   { question: "Which sentence is in the present tense?", options: ["She walked to school.", "She walks to school.", "She will walk to school.", "She was walking to school."], answer: "She walks to school.", category: "grammar" },
+   { question: "What is the plural form of 'mouse'?", options: ["Mouses", "Mice", "Mouse", "Mices"], answer: "Mice", category: "grammar" },
+   { question: "Which word is an adjective?", options: ["Happy", "Run", "Book", "Quickly"], answer: "Happy", category: "grammar" },
+   { question: "What is the comparative form of 'bad'?", options: ["Worse", "Worst", "Badder", "More bad"], answer: "Worse", category: "grammar" },
+   { question: "Which punctuation mark indicates a strong pause?", options: ["Semicolon", "Comma", "Period", "Colon"], answer: "Period", category: "grammar" },
+   { question: "What is the object in the sentence 'She read the book'?", options: ["She", "Read", "The book", "None"], answer: "The book", category: "grammar" },
+   { question: "Which sentence uses correct pronoun agreement?", options: ["Each student must submit their homework.", "Each student must submit his or her homework.", "Each student must submit its homework.", "Each student must submits their homework."], answer: "Each student must submit his or her homework.", category: "grammar" },
+   { question: "What is the superlative form of 'big'?", options: ["Bigger", "Biggest", "More big", "Most big"], answer: "Biggest", category: "grammar" },
+   { question: "Which word is a preposition?", options: ["Under", "Run", "Big", "Table"], answer: "Under", category: "grammar" },
+   { question: "What is the past tense of 'eat'?", options: ["Ate", "Eaten", "Eating", "Eats"], answer: "Ate", category: "grammar" },
+   { question: "Which sentence is in the future tense?", options: ["He runs fast.", "He ran fast.", "He will run fast.", "He is running fast."], answer: "He will run fast.", category: "grammar" },
+   { question: "What is the plural form of 'foot'?", options: ["Foots", "Feet", "Footes", "Feets"], answer: "Feet", category: "grammar" },
+   { question: "Which word is a verb?", options: ["Sing", "Big", "Table", "Quick"], answer: "Sing", category: "grammar" },
+   { question: "What is the comparative form of 'good'?", options: ["Better", "Best", "Gooder", "More good"], answer: "Better", category: "grammar" },
+   { question: "Which punctuation mark is used for possession?", options: ["Apostrophe", "Comma", "Semicolon", "Colon"], answer: "Apostrophe", category: "grammar" },
+   { question: "What is the subject in the sentence 'The bird sang beautifully'?", options: ["The bird", "Sang", "Beautifully", "None"], answer: "The bird", category: "grammar" },
+   { question: "Which sentence uses correct subject-verb agreement?", options: ["The cat sleep quietly.", "The cats sleeps quietly.", "The cats sleep quietly.", "The cat sleeps quiet."], answer: "The cats sleep quietly.", category: "grammar" },
+   { question: "What is the superlative form of 'small'?", options: ["Smaller", "Smallest", "More small", "Most small"], answer: "Smallest", category: "grammar" },
+   { question: "Which word is a pronoun?", options: ["He", "Run", "Big", "Table"], answer: "He", category: "grammar" },
+   { question: "What is the past participle of 'write'?", options: ["Wrote", "Written", "Writing", "Writes"], answer: "Written", category: "grammar" },
+   { question: "Which sentence is in the past tense?", options: ["She sings loudly.", "She sang loudly.", "She will sing loudly.", "She is singing loudly."], answer: "She sang loudly.", category: "grammar" },
+   { question: "What is the plural form of 'leaf'?", options: ["Leafs", "Leaves", "Leafes", "Leavs"], answer: "Leaves", category: "grammar" },
+   { question: "Which word is an adjective?", options: ["Tall", "Run", "Book", "Quickly"], answer: "Tall", category: "grammar" },
+   { question: "What is the comparative form of 'big'?", options: ["Bigger", "Biggest", "More big", "Most big"], answer: "Bigger", category: "grammar" },
+   { question: "Which punctuation mark is used for a question?", options: ["Question Mark", "Comma", "Period", "Semicolon"], answer: "Question Mark", category: "grammar" },
+   { question: "What is the object in the sentence 'She painted the house'?", options: ["She", "Painted", "The house", "None"], answer: "The house", category: "grammar" },
+   { question: "Which sentence uses correct pronoun agreement?", options: ["Each child must bring their toy.", "Each child must bring his or her toy.", "Each child must bring its toy.", "Each child must brings their toy."], answer: "Each child must bring his or her toy.", category: "grammar" },
+   { question: "What is the superlative form of 'good'?", options: ["Best", "Better", "Goodest", "More good"], answer: "Best", category: "grammar" }
+   ];
+   
+    let selectedQuizData = [];
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLeft = 180;
+    let timerInterval;
+    let userAnswers = [];
+    let timerDuration = 180;
+    let selectedOption = null;
+    let questionCount = 10;
+    let selectedQuestionType = "mixed";
+
+    const timerEl = document.getElementById('time');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const scoreEl = document.getElementById('score');
+    const summaryTextEl = document.getElementById('summary-text');
+    const resultsListEl = document.getElementById('results-list');
+    const questionStatusEl = document.getElementById('question-status');
+    const settingsPopup = document.querySelector('.settings-popup');
+    const quizPopup = document.querySelector('.quiz-popup');
+    const resultsPopup = document.querySelector('.results-popup');
+    const nextBtn = document.getElementById('next-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const quizTitleEl = document.getElementById('quiz-title');
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    async function startQuiz() {
+        timerDuration = parseInt(document.getElementById('timer-duration').value) * 60 || 180;
+        questionCount = parseInt(document.getElementById('question-count').value) || 10;
+        selectedQuestionType = document.getElementById('question-type').value;
+
+        // Filter questions based on selected type
+        let filteredQuizData = [];
+        if (selectedQuestionType === "intelligence") {
+            filteredQuizData = quizData.filter(q => q.category === "intelligence");
+        } else if (selectedQuestionType === "grammar") {
+            filteredQuizData = quizData.filter(q => q.category === "grammar");
+        } else {
+            filteredQuizData = [...quizData]; // Mixed includes all questions
+        }
+
+        if (timerDuration < 60) {
+            alert('Timer must be at least 1 minute.');
+            return;
+        }
+        if (questionCount < 1 || questionCount > filteredQuizData.length) {
+            alert(`Please select a number of questions between 1 and ${filteredQuizData.length}.`);
+            return;
+        }
+
+        // Select random questions from filtered data
+        selectedQuizData = shuffleArray([...filteredQuizData]).slice(0, questionCount);
+        timeLeft = timerDuration;
+        settingsPopup.classList.remove('active');
+        quizPopup.classList.add('active');
+        
+        // Update quiz title based on question type
+        quizTitleEl.textContent = selectedQuestionType === "intelligence" ? "Intelligence Test" : 
+                                 selectedQuestionType === "grammar" ? "Eng Grammar Test" : 
+                                 "Mixed Questions Quiz";
+        
+        startTimer();
+        loadQuestion();
+    }
+
+    function startTimer() {
+        timerEl.textContent = formatTime(timeLeft);
+        timerEl.parentElement.classList.remove('warning');
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerEl.textContent = formatTime(timeLeft);
+            if (timeLeft <= 60) {
+                timerEl.parentElement.classList.add('warning');
+            }
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                endQuiz();
+            }
+        }, 1000);
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    function loadQuestion() {
+        if (currentQuestion >= selectedQuizData.length) {
+            endQuiz();
+            return;
+        }
+        selectedOption = null;
+        nextBtn.disabled = true;
+        const currentQuiz = selectedQuizData[currentQuestion];
+        questionEl.textContent = currentQuiz.question;
+        optionsEl.innerHTML = '';
+        currentQuiz.options.forEach(option => {
+            const button = document.createElement('button');
+            button.classList.add('option');
+            button.textContent = option;
+            button.onclick = () => selectOption(option, button);
+            optionsEl.appendChild(button);
+        });
+        questionStatusEl.textContent = `Question ${currentQuestion + 1} of ${selectedQuizData.length}`;
+        updateProgressBar();
+    }
+
+    function selectOption(option, button) {
+        selectedOption = option;
+        nextBtn.disabled = false;
+        const buttons = optionsEl.querySelectorAll('.option');
+        buttons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+    }
+
+    function updateProgressBar() {
+        const progress = ((currentQuestion + 1) / selectedQuizData.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    function checkAnswer() {
+        const currentQuiz = selectedQuizData[currentQuestion];
+        const isCorrect = selectedOption === currentQuiz.answer;
+        userAnswers.push({ 
+            question: currentQuiz.question, 
+            selected: selectedOption || 'No answer', 
+            correct: currentQuiz.answer, 
+            isCorrect 
+        });
+        if (isCorrect) score++;
+        const buttons = optionsEl.querySelectorAll('.option');
+        buttons.forEach(button => {
+            if (button.textContent === currentQuiz.answer) {
+                button.classList.add('correct');
+            } else if (button.textContent === selectedOption) {
+                button.classList.add('incorrect');
+            }
+            button.disabled = true;
+        });
+    }
+
+    function nextQuestion() {
+        if (!selectedOption) return;
+        checkAnswer();
+        currentQuestion++;
+        loadQuestion();
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        quizPopup.classList.remove('active');
+        resultsPopup.classList.add('active');
+        const percentage = ((score / selectedQuizData.length) * 100).toFixed(1);
+        scoreEl.textContent = `${score}/${selectedQuizData.length}`;
+        summaryTextEl.textContent = `You scored ${percentage}%! ${score >= selectedQuizData.length * 0.8 ? 'Excellent job!' : score >= selectedQuizData.length * 0.5 ? 'Good effort!' : 'Keep practicing!'}`;
+        resultsListEl.innerHTML = '';
+        userAnswers.forEach((answer, index) => {
+            const div = document.createElement('div');
+            div.classList.add('result-item', answer.isCorrect ? 'correct' : 'incorrect');
+            div.style.animationDelay = `${index * 0.3}s`;
+            div.innerHTML = `
+                <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
+                <p><strong>Your Answer:</strong> ${answer.selected}</p>
+                <p><strong>Correct Answer:</strong> ${answer.correct}</p>
+            `;
+            resultsListEl.appendChild(div);
+        });
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        userAnswers = [];
+        selectedOption = null;
+        selectedQuizData = [];
+        resultsPopup.classList.remove('active');
+        settingsPopup.classList.add('active');
+    }
+
+    // Load questions when the page loads (no need for loadQuestions function)
+    </script>
+</body>
+</html>
+n)
+    </script>
+</body>
+</html>
+        { "question": "What is the plural form of 'sheep'?", "options": ["Sheeps", "Sheep", "Sheepes", "Sheepen"], "answer": "Sheep", "category": "grammar" },
+        { "question": "Which word is a verb?", "options": ["Sing", "Big", "Table", "Happy"], "answer": "Sing", "category": "grammar" },
+        { "question": "What is the comparative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Faster", "category": "grammar" },
+        { "question": "Which punctuation mark is used to show a question?", "options": ["Question Mark", "Comma", "Semicolon", "Colon"], "answer": "Question Mark", "category": "grammar" },
+        { "question": "What is the subject in the sentence 'The car sped by'?", "options": ["The car", "Sped", "By", "None"], "answer": "The car", "category": "grammar" },
+        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The dog run fast.", "The dogs runs fast.", "The dogs run fast.", "The dog runs fastly."], "answer": "The dogs run fast.", "category": "grammar" },
+        { "question": "What is the superlative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happiest", "category": "grammar" },
+        
+        { "question": "Which word is a noun?", "options": ["Dance", "Big", "Table", "Quickly"], "answer": "Table", "category": "grammar" },
+        { "question": "What is the past tense of 'drink'?", "options": ["Drank", "Drunk", "Drinking", "Drinks"], "answer": "Drank", "category": "grammar" },
+        { "question": "Which sentence is in the passive voice?", "options": ["The chef cooked the meal.", "The meal was cooked by the chef.", "The chef cooks the meal.", "The meal cooks slowly."], "answer": "The meal was cooked by the chef.", "category": "grammar" },
+        { "question": "What is the plural form of 'foot'?", "options": ["Foots", "Feet", "Footes", "Feeten"], "answer": "Feet", "category": "grammar" },
+        { "question": "Which word is an adverb?", "options": ["Slowly", "Slow", "Book", "Table"], "answer": "Slowly", "category": "grammar" },
+        { "question": "What is the superlative form of 'bad'?", "options": ["Worse", "Worst", "Badder", "More bad"], "answer": "Worst", "category": "grammar" },
+        { "question": "Which punctuation mark is used to connect clauses?", "options": ["Semicolon", "Comma", "Period", "Colon"], "answer": "Semicolon", "category": "grammar" },
+        { "question": "What is the subject in the sentence 'The wind howled loudly'?", "options": ["The wind", "Howled", "Loudly", "None"], "answer": "The wind", "category": "grammar" },
+        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The team is winning.", "The team are winning.", "The team wins.", "The team winning."], "answer": "The team is winning.", "category": "grammar" },
+        { "question": "What is the comparative form of 'big'?", "options": ["Bigger", "Biggest", "More big", "Most big"], "answer": "Bigger", "category": "grammar" },
+        { "question": "Which word is a conjunction?", "options": ["But", "Run", "Big", "Table"], "answer": "But", "category": "grammar" },
+        { "question": "What is the past participle of 'run'?", "options": ["Ran", "Run", "Running", "Runs"], "answer": "Run", "category": "grammar" },
+        { "question": "Which sentence is in the past continuous tense?", "options": ["She sings beautifully.", "She was singing beautifully.", "She will sing beautifully.", "She is singing beautifully."], "answer": "She was singing beautifully.", "category": "grammar" },
+        { "question": "What is the plural form of 'goose'?", "options": ["Gooses", "Geese", "Goose", "Geese"], "answer": "Geese", "category": "grammar" },
+        { "question": "Which word is an adjective?", "options": ["Tall", "Run", "Book", "Quickly"], "answer": "Tall", "category": "grammar" },
+        { "question": "What is the comparative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happier", "category": "grammar" },
+        { "question": "Which punctuation mark is used to show excitement?", "options": ["Exclamation Point", "Comma", "Semicolon", "Colon"], "answer": "Exclamation Point", "category": "grammar" },
+        { "question": "What is the object in the sentence 'She painted the wall'?", "options": ["She", "Painted", "The wall", "None"], "answer": "The wall", "category": "grammar" },
+        { "question": "Which sentence uses correct pronoun agreement?", "options": ["Each child must bring their book.", "Each child must bring his or her book.", "Each child must bring its book.", "Each child must brings their book."], "answer": "Each child must bring his or her book.", "category": "grammar" },
+        { "question": "What is the superlative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Fastest", "category": "grammar" },
+        { "question": "Which word is a preposition?", "options": ["Over", "Run", "Big", "Table"], "answer": "Over", "category": "grammar" },
+        { "question": "What is the past tense of 'eat'?", "options": ["Ate", "Eaten", "Eating", "Eats"], "answer": "Ate", "category": "grammar" },
+        { "question": "Which sentence is in the future continuous tense?", "options": ["She sings beautifully.", "She was singing beautifully.", "She will be singing beautifully.", "She is singing beautifully."], "answer": "She will be singing beautifully.", "category": "grammar" },
+        { "question": "What is the plural form of 'man'?", "options": ["Mans", "Men", "Manes", "Menen"], "answer": "Men", "category": "grammar" },
+        { "question": "Which word is a verb?", "options": ["Dance", "Big", "Table", "Happy"], "answer": "Dance", "category": "grammar" },
+        { "question": "What is the comparative form of 'good'?", "options": ["Better", "Best", "Gooder", "More good"], "answer": "Better", "category": "grammar" },
+        { "question": "Which punctuation mark is used to show possession?", "options": ["Apostrophe", "Comma", "Semicolon", "Colon"], "answer": "Apostrophe", "category": "grammar" },
+        { "question": "What is the subject in the sentence 'The river flows swiftly'?", "options": ["The river", "Flows", "Swiftly", "None"], "answer": "The river", "category": "grammar" },
+        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The cats is sleeping.", "The cats are sleeping.", "The cat are sleeping.", "The cats sleeps."], "answer": "The cats are sleeping.", "category": "grammar" },
+        { "question": "What is the superlative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happiest", "category": "grammar" },
+        { "question": "Which word is a pronoun?", "options": ["It", "Run", "Big", "Table"], "answer": "It", "category": "grammar" },
+        { "question": "What is the past participle of 'drink'?", "options": ["Drank", "Drunk", "Drinking", "Drinks"], "answer": "Drunk", "category": "grammar" },
+        { "question": "Which sentence is in the present perfect tense?", "options": ["She walks to school.", "She walked to school.", "She has walked to school.", "She is walking to school."], "answer": "She has walked to school.", "category": "grammar" },
+        { "question": "What is the plural form of 'woman'?", "options": ["Womans", "Women", "Womanes", "Womenen"], "answer": "Women", "category": "grammar" },
+        { "question": "Which word is an adjective?", "options": ["Bright", "Run", "Book", "Quickly"], "answer": "Bright", "category": "grammar" },
+        { "question": "What is the comparative form of 'bad'?", "options": ["Worse", "Worst", "Badder", "More bad"], "answer": "Worse", "category": "grammar" },
+        { "question": "Which punctuation mark is used to introduce a list?", "options": ["Colon", "Comma", "Semicolon", "Period"], "answer": "Colon", "category": "grammar" },
+        { "question": "What is the object in the sentence 'He wrote a letter'?", "options": ["He", "Wrote", "A letter", "None"], "answer": "A letter", "category": "grammar" },
+        { "question": "Which sentence uses correct pronoun agreement?", "options": ["Each teacher must submit their report.", "Each teacher must submit his or her report.", "Each teacher must submit its report.", "Each teacher must submits their report."], "answer": "Each teacher must submit his or her report.", "category": "grammar" },
+        { "question": "What is the superlative form of 'big'?", "options": ["Bigger", "Biggest", "More big", "Most big"], "answer": "Biggest", "category": "grammar" },
+        { "question": "Which word is a preposition?", "options": ["Under", "Run", "Big", "Table"], "answer": "Under", "category": "grammar" },
+        { "question": "What is the past tense of 'swim'?", "options": ["Swam", "Swum", "Swimming", "Swims"], "answer": "Swam", "category": "grammar" },
+        { "question": "Which sentence is in the past perfect tense?", "options": ["She sings beautifully.", "She had sung beautifully.", "She will sing beautifully.", "She is singing beautifully."], "answer": "She had sung beautifully.", "category": "grammar" },
+        { "question": "What is the plural form of 'child'?", "options": ["Children", "Childs", "Childes", "Childrens"], "answer": "Children", "category": "grammar" },
+        { "question": "Which word is a verb?", "options": ["Write", "Big", "Table", "Happy"], "answer": "Write", "category": "grammar" },
+        { "question": "What is the comparative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Faster", "category": "grammar" },
+        { "question": "Which punctuation mark is used to show a question?", "options": ["Question Mark", "Comma", "Semicolon", "Colon"], "answer": "Question Mark", "category": "grammar" },
+        { "question": "What is the subject in the sentence 'The sun shines brightly'?", "options": ["The sun", "Shines", "Brightly", "None"], "answer": "The sun", "category": "grammar" },
+        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The students is studying.", "The students are studying.", "The student are studying.", "The students studies."], "answer": "The students are studying.", "category": "grammar" },
+        { "question": "What is the superlative form of 'good'?", "options": ["Best", "Better", "Goodest", "More good"], "answer": "Best", "category": "grammar" }
+              
+      ];
+              
+        
+
+
+        let selectedQuizData = [];
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 180;
+        let timerInterval;
+        let userAnswers = [];
+        let timerDuration = 180;
+        let selectedOption = null;
+        let questionCount = 10;
+        let selectedQuestionType = "mixed";
+
+        const timerEl = document.getElementById('time');
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const scoreEl = document.getElementById('score');
+        const summaryTextEl = document.getElementById('summary-text');
+        const resultsListEl = document.getElementById('results-list');
+        const questionStatusEl = document.getElementById('question-status');
+        const settingsPopup = document.querySelector('.settings-popup');
+        const quizPopup = document.querySelector('.quiz-popup');
+        const resultsPopup = document.querySelector('.results-popup');
+        const nextBtn = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const quizTitleEl = document.getElementById('quiz-title');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        async function startQuiz() {
+            timerDuration = parseInt(document.getElementById('timer-duration').value) * 60 || 180;
+            questionCount = parseInt(document.getElementById('question-count').value) || 10;
+            selectedQuestionType = document.getElementById('question-type').value;
+
+            // Filter questions based on selected type
+            let filteredQuizData = [];
+            if (selectedQuestionType === "intelligence") {
+                filteredQuizData = quizData.filter(q => q.category === "intelligence");
+            } else if (selectedQuestionType === "grammar") {
+                filteredQuizData = quizData.filter(q => q.category === "grammar");
+            } else {
+                filteredQuizData = [...quizData]; // Mixed includes all questions
+            }
+
+            if (timerDuration < 60) {
+                alert('Timer must be at least 1 minute.');
+                return;
+            }
+            if (questionCount < 1 || questionCount > filteredQuizData.length) {
+                alert(`Please select a number of questions between 1 and ${filteredQuizData.length}.`);
+                return;
+            }
+
+            // Select random questions from filtered data
+            selectedQuizData = shuffleArray([...filteredQuizData]).slice(0, questionCount);
+            timeLeft = timerDuration;
+            settingsPopup.classList.remove('active');
+            quizPopup.classList.add('active');
+            
+            // Update quiz title based on question type
+            quizTitleEl.textContent = selectedQuestionType === "intelligence" ? "Intelligence Test" : 
+                                     selectedQuestionType === "grammar" ? "English Grammar Quiz" : 
+                                     "Mixed Questions Quiz";
+            
+            startTimer();
+            loadQuestion();
+        }
+
+        function startTimer() {
+            timerEl.textContent = formatTime(timeLeft);
+            timerEl.parentElement.classList.remove('warning');
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = formatTime(timeLeft);
+                if (timeLeft <= 60) {
+                    timerEl.parentElement.classList.add('warning');
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function loadQuestion() {
+            if (currentQuestion >= selectedQuizData.length) {
+                endQuiz();
+                return;
+            }
+            selectedOption = null;
+            nextBtn.disabled = true;
+            const currentQuiz = selectedQuizData[currentQuestion];
+            questionEl.textContent = currentQuiz.question;
+            optionsEl.innerHTML = '';
+            currentQuiz.options.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option');
+                button.textContent = option;
+                button.onclick = () => selectOption(option, button);
+                optionsEl.appendChild(button);
+            });
+            questionStatusEl.textContent = `Question ${currentQuestion + 1} of ${selectedQuizData.length}`;
+            updateProgressBar();
+        }
+
+        function selectOption(option, button) {
+            selectedOption = option;
+            nextBtn.disabled = false;
+            const buttons = optionsEl.querySelectorAll('.option');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        }
+
+        function updateProgressBar() {
+            const progress = ((currentQuestion + 1) / selectedQuizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function checkAnswer() {
+            const currentQuiz = selectedQuizData[currentQuestion];
+            const isCorrect = selectedOption === currentQuiz.answer;
+            userAnswers.push({ 
+                question: currentQuiz.question, 
+                selected: selectedOption || 'No answer', 
+                correct: currentQuiz.answer, 
+                isCorrect 
+            });
+            if (isCorrect) score++;
+            const buttons = optionsEl.querySelectorAll('.option');
+            buttons.forEach(button => {
+                if (button.textContent === currentQuiz.answer) {
+                    button.classList.add('correct');
+                } else if (button.textContent === selectedOption) {
+                    button.classList.add('incorrect');
+                }
+                button.disabled = true;
+            });
+        }
+
+        function nextQuestion() {
+            if (!selectedOption) return;
+            checkAnswer();
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function endQuiz() {
+            clearInterval(timerInterval);
+            quizPopup.classList.remove('active');
+            resultsPopup.classList.add('active');
+            const percentage = ((score / selectedQuizData.length) * 100).toFixed(1);
+            scoreEl.textContent = `${score}/${selectedQuizData.length}`;
+            summaryTextEl.textContent = `You scored ${percentage}%! ${score >= selectedQuizData.length * 0.8 ? 'Excellent job!' : score >= selectedQuizData.length * 0.5 ? 'Good effort!' : 'Keep practicing!'}`;
+            resultsListEl.innerHTML = '';
+            userAnswers.forEach((answer, index) => {
+                const div = document.createElement('div');
+                div.classList.add('result-item', answer.isCorrect ? 'correct' : 'incorrect');
+                div.style.animationDelay = `${index * 0.3}s`;
+                div.innerHTML = `
+                    <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
+                    <p><strong>Your Answer:</strong> ${answer.selected}</p>
+                    <p><strong>Correct Answer:</strong> ${answer.correct}</p>
+                `;
+                resultsListEl.appendChild(div);
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            userAnswers = [];
+            selectedOption = null;
+            selectedQuizData = [];
+            resultsPopup.classList.remove('active');
+            settingsPopup.classList.add('active');
+        }
+
+        // Load questions when the page loads (no need for loadQuestions function)
+    </script>
+</body>
+</html>
