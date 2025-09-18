@@ -280,7 +280,7 @@
         </div>
         <div class="settings-option">
             <label for="question-count">Number of Questions:</label>
-            <input type="number" id="question-count" min="1" max="58" value="10">
+            <input type="number" id="question-count" min="1" max="500" value="10">
         </div>
         <button onclick="startQuiz()">Start Quiz</button>
     </div>
@@ -298,8 +298,8 @@
             </div>
             <div class="quiz-footer">
                 <p id="question-status"></p>
+                <button id="end-btn" onclick="endQuiz()" style="transform:translateX(-50px);" >End Quiz</button>  	            
   	            <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
-                <button id="end-btn" onclick="endQuiz()" style="margin-left:8px;" >End Quiz</button>  	            
             </div>
             <div id="progress-bar-container">
                 <div id="progress-bar"></div>
@@ -322,8 +322,8 @@
         </div>
     </div>
 </div>
-<!-- <script type="text/javascript" src="questions.js"></script>   -->
-<script>
+
+<script type="text/javascript">
    
  let quizData = [
    { question: "Big is to small as tall is to ?", options: ["Short", "High", "Long", "Wide"], answer: "Short", category: "intelligence" },
@@ -699,6 +699,7 @@
    { question: "What is the object in the sentence 'She painted the house'?", options: ["She", "Painted", "The house", "None"], answer: "The house", category: "grammar" },
    { question: "Which sentence uses correct pronoun agreement?", options: ["Each child must bring their toy.", "Each child must bring his or her toy.", "Each child must bring its toy.", "Each child must brings their toy."], answer: "Each child must bring his or her toy.", category: "grammar" },
    { question: "What is the superlative form of 'good'?", options: ["Best", "Better", "Goodest", "More good"], answer: "Best", category: "grammar" }
+   
    ];
    
     let selectedQuizData = [];
@@ -746,7 +747,7 @@
         } else if (selectedQuestionType === "grammar") {
             filteredQuizData = quizData.filter(q => q.category === "grammar");
         } else {
-            filteredQuizData = [...quizData]; // Mixed includes all questions
+            filteredQuizData = quizData.filter(q => q.category === "mixed"); // Mixed includes all questions
         }
 
         if (timerDuration < 60) {
@@ -767,7 +768,7 @@
         // Update quiz title based on question type
         quizTitleEl.textContent = selectedQuestionType === "intelligence" ? "Intelligence Test" : 
                                  selectedQuestionType === "grammar" ? "Eng Grammar Test" : 
-                                 "Mixed Questions Quiz";
+                                 "Mixed Quiz";
         
         startTimer();
         loadQuestion();
@@ -893,263 +894,5 @@
     </script>
 </body>
 </html>
-n)
-    </script>
-</body>
-</html>
-        { "question": "What is the plural form of 'sheep'?", "options": ["Sheeps", "Sheep", "Sheepes", "Sheepen"], "answer": "Sheep", "category": "grammar" },
-        { "question": "Which word is a verb?", "options": ["Sing", "Big", "Table", "Happy"], "answer": "Sing", "category": "grammar" },
-        { "question": "What is the comparative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Faster", "category": "grammar" },
-        { "question": "Which punctuation mark is used to show a question?", "options": ["Question Mark", "Comma", "Semicolon", "Colon"], "answer": "Question Mark", "category": "grammar" },
-        { "question": "What is the subject in the sentence 'The car sped by'?", "options": ["The car", "Sped", "By", "None"], "answer": "The car", "category": "grammar" },
-        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The dog run fast.", "The dogs runs fast.", "The dogs run fast.", "The dog runs fastly."], "answer": "The dogs run fast.", "category": "grammar" },
-        { "question": "What is the superlative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happiest", "category": "grammar" },
-        
-        { "question": "Which word is a noun?", "options": ["Dance", "Big", "Table", "Quickly"], "answer": "Table", "category": "grammar" },
-        { "question": "What is the past tense of 'drink'?", "options": ["Drank", "Drunk", "Drinking", "Drinks"], "answer": "Drank", "category": "grammar" },
-        { "question": "Which sentence is in the passive voice?", "options": ["The chef cooked the meal.", "The meal was cooked by the chef.", "The chef cooks the meal.", "The meal cooks slowly."], "answer": "The meal was cooked by the chef.", "category": "grammar" },
-        { "question": "What is the plural form of 'foot'?", "options": ["Foots", "Feet", "Footes", "Feeten"], "answer": "Feet", "category": "grammar" },
-        { "question": "Which word is an adverb?", "options": ["Slowly", "Slow", "Book", "Table"], "answer": "Slowly", "category": "grammar" },
-        { "question": "What is the superlative form of 'bad'?", "options": ["Worse", "Worst", "Badder", "More bad"], "answer": "Worst", "category": "grammar" },
-        { "question": "Which punctuation mark is used to connect clauses?", "options": ["Semicolon", "Comma", "Period", "Colon"], "answer": "Semicolon", "category": "grammar" },
-        { "question": "What is the subject in the sentence 'The wind howled loudly'?", "options": ["The wind", "Howled", "Loudly", "None"], "answer": "The wind", "category": "grammar" },
-        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The team is winning.", "The team are winning.", "The team wins.", "The team winning."], "answer": "The team is winning.", "category": "grammar" },
-        { "question": "What is the comparative form of 'big'?", "options": ["Bigger", "Biggest", "More big", "Most big"], "answer": "Bigger", "category": "grammar" },
-        { "question": "Which word is a conjunction?", "options": ["But", "Run", "Big", "Table"], "answer": "But", "category": "grammar" },
-        { "question": "What is the past participle of 'run'?", "options": ["Ran", "Run", "Running", "Runs"], "answer": "Run", "category": "grammar" },
-        { "question": "Which sentence is in the past continuous tense?", "options": ["She sings beautifully.", "She was singing beautifully.", "She will sing beautifully.", "She is singing beautifully."], "answer": "She was singing beautifully.", "category": "grammar" },
-        { "question": "What is the plural form of 'goose'?", "options": ["Gooses", "Geese", "Goose", "Geese"], "answer": "Geese", "category": "grammar" },
-        { "question": "Which word is an adjective?", "options": ["Tall", "Run", "Book", "Quickly"], "answer": "Tall", "category": "grammar" },
-        { "question": "What is the comparative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happier", "category": "grammar" },
-        { "question": "Which punctuation mark is used to show excitement?", "options": ["Exclamation Point", "Comma", "Semicolon", "Colon"], "answer": "Exclamation Point", "category": "grammar" },
-        { "question": "What is the object in the sentence 'She painted the wall'?", "options": ["She", "Painted", "The wall", "None"], "answer": "The wall", "category": "grammar" },
-        { "question": "Which sentence uses correct pronoun agreement?", "options": ["Each child must bring their book.", "Each child must bring his or her book.", "Each child must bring its book.", "Each child must brings their book."], "answer": "Each child must bring his or her book.", "category": "grammar" },
-        { "question": "What is the superlative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Fastest", "category": "grammar" },
-        { "question": "Which word is a preposition?", "options": ["Over", "Run", "Big", "Table"], "answer": "Over", "category": "grammar" },
-        { "question": "What is the past tense of 'eat'?", "options": ["Ate", "Eaten", "Eating", "Eats"], "answer": "Ate", "category": "grammar" },
-        { "question": "Which sentence is in the future continuous tense?", "options": ["She sings beautifully.", "She was singing beautifully.", "She will be singing beautifully.", "She is singing beautifully."], "answer": "She will be singing beautifully.", "category": "grammar" },
-        { "question": "What is the plural form of 'man'?", "options": ["Mans", "Men", "Manes", "Menen"], "answer": "Men", "category": "grammar" },
-        { "question": "Which word is a verb?", "options": ["Dance", "Big", "Table", "Happy"], "answer": "Dance", "category": "grammar" },
-        { "question": "What is the comparative form of 'good'?", "options": ["Better", "Best", "Gooder", "More good"], "answer": "Better", "category": "grammar" },
-        { "question": "Which punctuation mark is used to show possession?", "options": ["Apostrophe", "Comma", "Semicolon", "Colon"], "answer": "Apostrophe", "category": "grammar" },
-        { "question": "What is the subject in the sentence 'The river flows swiftly'?", "options": ["The river", "Flows", "Swiftly", "None"], "answer": "The river", "category": "grammar" },
-        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The cats is sleeping.", "The cats are sleeping.", "The cat are sleeping.", "The cats sleeps."], "answer": "The cats are sleeping.", "category": "grammar" },
-        { "question": "What is the superlative form of 'happy'?", "options": ["Happier", "Happiest", "More happy", "Most happy"], "answer": "Happiest", "category": "grammar" },
-        { "question": "Which word is a pronoun?", "options": ["It", "Run", "Big", "Table"], "answer": "It", "category": "grammar" },
-        { "question": "What is the past participle of 'drink'?", "options": ["Drank", "Drunk", "Drinking", "Drinks"], "answer": "Drunk", "category": "grammar" },
-        { "question": "Which sentence is in the present perfect tense?", "options": ["She walks to school.", "She walked to school.", "She has walked to school.", "She is walking to school."], "answer": "She has walked to school.", "category": "grammar" },
-        { "question": "What is the plural form of 'woman'?", "options": ["Womans", "Women", "Womanes", "Womenen"], "answer": "Women", "category": "grammar" },
-        { "question": "Which word is an adjective?", "options": ["Bright", "Run", "Book", "Quickly"], "answer": "Bright", "category": "grammar" },
-        { "question": "What is the comparative form of 'bad'?", "options": ["Worse", "Worst", "Badder", "More bad"], "answer": "Worse", "category": "grammar" },
-        { "question": "Which punctuation mark is used to introduce a list?", "options": ["Colon", "Comma", "Semicolon", "Period"], "answer": "Colon", "category": "grammar" },
-        { "question": "What is the object in the sentence 'He wrote a letter'?", "options": ["He", "Wrote", "A letter", "None"], "answer": "A letter", "category": "grammar" },
-        { "question": "Which sentence uses correct pronoun agreement?", "options": ["Each teacher must submit their report.", "Each teacher must submit his or her report.", "Each teacher must submit its report.", "Each teacher must submits their report."], "answer": "Each teacher must submit his or her report.", "category": "grammar" },
-        { "question": "What is the superlative form of 'big'?", "options": ["Bigger", "Biggest", "More big", "Most big"], "answer": "Biggest", "category": "grammar" },
-        { "question": "Which word is a preposition?", "options": ["Under", "Run", "Big", "Table"], "answer": "Under", "category": "grammar" },
-        { "question": "What is the past tense of 'swim'?", "options": ["Swam", "Swum", "Swimming", "Swims"], "answer": "Swam", "category": "grammar" },
-        { "question": "Which sentence is in the past perfect tense?", "options": ["She sings beautifully.", "She had sung beautifully.", "She will sing beautifully.", "She is singing beautifully."], "answer": "She had sung beautifully.", "category": "grammar" },
-        { "question": "What is the plural form of 'child'?", "options": ["Children", "Childs", "Childes", "Childrens"], "answer": "Children", "category": "grammar" },
-        { "question": "Which word is a verb?", "options": ["Write", "Big", "Table", "Happy"], "answer": "Write", "category": "grammar" },
-        { "question": "What is the comparative form of 'fast'?", "options": ["Faster", "Fastest", "More fast", "Most fast"], "answer": "Faster", "category": "grammar" },
-        { "question": "Which punctuation mark is used to show a question?", "options": ["Question Mark", "Comma", "Semicolon", "Colon"], "answer": "Question Mark", "category": "grammar" },
-        { "question": "What is the subject in the sentence 'The sun shines brightly'?", "options": ["The sun", "Shines", "Brightly", "None"], "answer": "The sun", "category": "grammar" },
-        { "question": "Which sentence uses correct subject-verb agreement?", "options": ["The students is studying.", "The students are studying.", "The student are studying.", "The students studies."], "answer": "The students are studying.", "category": "grammar" },
-        { "question": "What is the superlative form of 'good'?", "options": ["Best", "Better", "Goodest", "More good"], "answer": "Best", "category": "grammar" }
+
               
-      ];
-              
-        
-
-
-        let selectedQuizData = [];
-        let currentQuestion = 0;
-        let score = 0;
-        let timeLeft = 180;
-        let timerInterval;
-        let userAnswers = [];
-        let timerDuration = 180;
-        let selectedOption = null;
-        let questionCount = 10;
-        let selectedQuestionType = "mixed";
-
-        const timerEl = document.getElementById('time');
-        const questionEl = document.getElementById('question');
-        const optionsEl = document.getElementById('options');
-        const scoreEl = document.getElementById('score');
-        const summaryTextEl = document.getElementById('summary-text');
-        const resultsListEl = document.getElementById('results-list');
-        const questionStatusEl = document.getElementById('question-status');
-        const settingsPopup = document.querySelector('.settings-popup');
-        const quizPopup = document.querySelector('.quiz-popup');
-        const resultsPopup = document.querySelector('.results-popup');
-        const nextBtn = document.getElementById('next-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const quizTitleEl = document.getElementById('quiz-title');
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        async function startQuiz() {
-            timerDuration = parseInt(document.getElementById('timer-duration').value) * 60 || 180;
-            questionCount = parseInt(document.getElementById('question-count').value) || 10;
-            selectedQuestionType = document.getElementById('question-type').value;
-
-            // Filter questions based on selected type
-            let filteredQuizData = [];
-            if (selectedQuestionType === "intelligence") {
-                filteredQuizData = quizData.filter(q => q.category === "intelligence");
-            } else if (selectedQuestionType === "grammar") {
-                filteredQuizData = quizData.filter(q => q.category === "grammar");
-            } else {
-                filteredQuizData = [...quizData]; // Mixed includes all questions
-            }
-
-            if (timerDuration < 60) {
-                alert('Timer must be at least 1 minute.');
-                return;
-            }
-            if (questionCount < 1 || questionCount > filteredQuizData.length) {
-                alert(`Please select a number of questions between 1 and ${filteredQuizData.length}.`);
-                return;
-            }
-
-            // Select random questions from filtered data
-            selectedQuizData = shuffleArray([...filteredQuizData]).slice(0, questionCount);
-            timeLeft = timerDuration;
-            settingsPopup.classList.remove('active');
-            quizPopup.classList.add('active');
-            
-            // Update quiz title based on question type
-            quizTitleEl.textContent = selectedQuestionType === "intelligence" ? "Intelligence Test" : 
-                                     selectedQuestionType === "grammar" ? "English Grammar Quiz" : 
-                                     "Mixed Questions Quiz";
-            
-            startTimer();
-            loadQuestion();
-        }
-
-        function startTimer() {
-            timerEl.textContent = formatTime(timeLeft);
-            timerEl.parentElement.classList.remove('warning');
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                timerEl.textContent = formatTime(timeLeft);
-                if (timeLeft <= 60) {
-                    timerEl.parentElement.classList.add('warning');
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    endQuiz();
-                }
-            }, 1000);
-        }
-
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-
-        function loadQuestion() {
-            if (currentQuestion >= selectedQuizData.length) {
-                endQuiz();
-                return;
-            }
-            selectedOption = null;
-            nextBtn.disabled = true;
-            const currentQuiz = selectedQuizData[currentQuestion];
-            questionEl.textContent = currentQuiz.question;
-            optionsEl.innerHTML = '';
-            currentQuiz.options.forEach(option => {
-                const button = document.createElement('button');
-                button.classList.add('option');
-                button.textContent = option;
-                button.onclick = () => selectOption(option, button);
-                optionsEl.appendChild(button);
-            });
-            questionStatusEl.textContent = `Question ${currentQuestion + 1} of ${selectedQuizData.length}`;
-            updateProgressBar();
-        }
-
-        function selectOption(option, button) {
-            selectedOption = option;
-            nextBtn.disabled = false;
-            const buttons = optionsEl.querySelectorAll('.option');
-            buttons.forEach(btn => btn.classList.remove('selected'));
-            button.classList.add('selected');
-        }
-
-        function updateProgressBar() {
-            const progress = ((currentQuestion + 1) / selectedQuizData.length) * 100;
-            progressBar.style.width = `${progress}%`;
-        }
-
-        function checkAnswer() {
-            const currentQuiz = selectedQuizData[currentQuestion];
-            const isCorrect = selectedOption === currentQuiz.answer;
-            userAnswers.push({ 
-                question: currentQuiz.question, 
-                selected: selectedOption || 'No answer', 
-                correct: currentQuiz.answer, 
-                isCorrect 
-            });
-            if (isCorrect) score++;
-            const buttons = optionsEl.querySelectorAll('.option');
-            buttons.forEach(button => {
-                if (button.textContent === currentQuiz.answer) {
-                    button.classList.add('correct');
-                } else if (button.textContent === selectedOption) {
-                    button.classList.add('incorrect');
-                }
-                button.disabled = true;
-            });
-        }
-
-        function nextQuestion() {
-            if (!selectedOption) return;
-            checkAnswer();
-            currentQuestion++;
-            loadQuestion();
-        }
-
-        function endQuiz() {
-            clearInterval(timerInterval);
-            quizPopup.classList.remove('active');
-            resultsPopup.classList.add('active');
-            const percentage = ((score / selectedQuizData.length) * 100).toFixed(1);
-            scoreEl.textContent = `${score}/${selectedQuizData.length}`;
-            summaryTextEl.textContent = `You scored ${percentage}%! ${score >= selectedQuizData.length * 0.8 ? 'Excellent job!' : score >= selectedQuizData.length * 0.5 ? 'Good effort!' : 'Keep practicing!'}`;
-            resultsListEl.innerHTML = '';
-            userAnswers.forEach((answer, index) => {
-                const div = document.createElement('div');
-                div.classList.add('result-item', answer.isCorrect ? 'correct' : 'incorrect');
-                div.style.animationDelay = `${index * 0.3}s`;
-                div.innerHTML = `
-                    <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
-                    <p><strong>Your Answer:</strong> ${answer.selected}</p>
-                    <p><strong>Correct Answer:</strong> ${answer.correct}</p>
-                `;
-                resultsListEl.appendChild(div);
-            });
-        }
-
-        function restartQuiz() {
-            currentQuestion = 0;
-            score = 0;
-            userAnswers = [];
-            selectedOption = null;
-            selectedQuizData = [];
-            resultsPopup.classList.remove('active');
-            settingsPopup.classList.add('active');
-        }
-
-        // Load questions when the page loads (no need for loadQuestions function)
-    </script>
-</body>
-</html>
